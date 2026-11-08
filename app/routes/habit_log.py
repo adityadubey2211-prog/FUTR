@@ -46,3 +46,52 @@ def create_habit_log(
     db.refresh(new_log)
 
     return new_log
+
+
+@router.get("/", response_model=list[HabitLogResponse])
+def get_habit_logs(
+    habit_id: int | None = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(HabitLog)
+
+    if habit_id is not None:
+        habit = db.query(Habit).filter(
+            Habit.id == habit_id
+        ).first()
+
+        if habit is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Habit not found"
+            )
+
+        query = query.filter(
+            HabitLog.habit_id == habit_id
+        )
+
+    return query.order_by(HabitLog.log_date.desc()).all()
+
+
+@router.put("/{log_id}", response_model=HabitLogResponse)
+def update_habit_log(
+    log_id: int,
+    completed: bool,
+    db: Session = Depends(get_db)
+):
+    log = db.query(HabitLog).filter(
+        HabitLog.id == log_id
+    ).first()
+
+    if log is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Habit log not found"
+        )
+
+    log.completed = completed
+
+    db.commit()
+    db.refresh(log)
+
+    return log
