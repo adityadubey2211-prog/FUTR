@@ -6,6 +6,8 @@ from app.models.habit import Habit
 from app.schemas.habit import HabitCreate
 from app.schemas.habit import HabitCreate, HabitUpdate, HabitResponse
 router = APIRouter(prefix="/habits", tags=["Habits"])
+from app.models.habit_log import HabitLog
+from app.services.habit_analytics import calculate_streaks, calculate_consistency
 
 
 @router.post("/", response_model=HabitResponse, status_code=201)
@@ -72,3 +74,33 @@ def update_habit(
     db.refresh(habit)
 
     return habit
+
+@router.get("/{habit_id}/stats")
+def get_habit_stats(
+    habit_id: int,
+    db: Session = Depends(get_db)
+):
+    habit = db.query(Habit).filter(
+        Habit.id == habit_id
+    ).first()
+
+    if habit is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Habit not found"
+        )
+
+    logs = db.query(HabitLog).filter(
+        HabitLog.habit_id == habit_id
+    ).all()
+
+    streaks = calculate_streaks(logs)
+    consistency = calculate_consistency(logs)
+
+    return {
+        "habit_id": habit_id,
+        "habit_name": habit.name,
+        "current_streak": streaks["current_streak"],
+        "longest_streak": streaks["longest_streak"],
+        "consistency": consistency
+    }
