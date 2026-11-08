@@ -3,6 +3,7 @@ from app.database import engine, Base
 from app.models.habit import Habit
 from app.routes.habits import router as habits_router
 from app.routes.habit_log import router as habit_logs_router
+from app.routes import future
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI(
@@ -12,6 +13,7 @@ app = FastAPI(
 )
 app.include_router(habits_router)
 app.include_router(habit_logs_router)
+app.include_router(future.router)
 
 @app.get("/")
 def home():
