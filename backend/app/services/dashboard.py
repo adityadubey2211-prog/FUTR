@@ -1,20 +1,18 @@
-from datetime import date, timedelta
+
+from datetime import timedelta
 
 from app.services.habit_analytics import (
     calculate_daily_score,
     calculate_streaks
 )
 
+
 def calculate_dashboard_summary(habits, logs, target_date):
 
-    # Today's score
     today_data = calculate_daily_score(
-        habits,
-        logs,
-        target_date
+        habits, logs, target_date
     )
 
-    # Last 7 days
     weekly_completed = 0
     weekly_expected = 0
 
@@ -48,7 +46,6 @@ def calculate_dashboard_summary(habits, logs, target_date):
         if weekly_expected > 0 else 0
     )
 
-    # Habit-wise streaks
     current_streaks = []
     longest_streaks = []
 
@@ -75,20 +72,18 @@ def calculate_dashboard_summary(habits, logs, target_date):
         "today": {
             "completed": today_data["completed_habits"],
             "pending": today_data["pending_habits"],
-            "score": today_data["score"]
+            "consistency": today_data["score"]
         },
 
         "weekly": {
             "total_days": 7,
             "completed": weekly_completed,
             "expected": weekly_expected,
-            "average_score": round(weekly_consistency, 2)
+            "consistency": round(weekly_consistency, 2)
         },
 
         "streaks": {
             "best_current_streak": max(current_streaks, default=0),
             "longest_streak": max(longest_streaks, default=0)
-        },
-
-        "overall_consistency": round(weekly_consistency, 2)
+        }
     }

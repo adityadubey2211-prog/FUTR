@@ -7,7 +7,7 @@ from app.routes import future
 from app.routes import heatmap
 from app.routes import daily_score
 from app.routes import analytics
-
+from app.routes import dashboard
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI(
@@ -21,7 +21,7 @@ app.include_router(future.router)
 app.include_router(heatmap.router)
 app.include_router(daily_score.router)
 app.include_router(analytics.router)
-
+app.include_router(dashboard.router)
 
 
 @app.get("/")

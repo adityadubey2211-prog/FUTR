@@ -73,6 +73,50 @@ def get_habit_logs(
     return query.order_by(HabitLog.log_date.desc()).all()
 
 
+@router.put("/daily", response_model=HabitLogResponse)
+def update_daily_habit_status(
+    log_data: HabitLogCreate,
+    db: Session = Depends(get_db)
+):
+    # Check habit exists
+    habit = db.query(Habit).filter(
+        Habit.id == log_data.habit_id
+    ).first()
+
+    if habit is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Habit not found"
+        )
+
+    # Find this habit's log for the given date
+    existing_log = db.query(HabitLog).filter(
+        HabitLog.habit_id == log_data.habit_id,
+        HabitLog.log_date == log_data.log_date
+    ).first()
+
+    if existing_log:
+        # Update existing record
+        existing_log.completed = log_data.completed
+        db.commit()
+        db.refresh(existing_log)
+        return existing_log
+
+    # Create a new record if it doesn't exist
+    new_log = HabitLog(
+        habit_id=log_data.habit_id,
+        log_date=log_data.log_date,
+        completed=log_data.completed
+    )
+
+    db.add(new_log)
+    db.commit()
+    db.refresh(new_log)
+
+    return new_log
+
+
+
 @router.put("/{log_id}", response_model=HabitLogResponse)
 def update_habit_log(
     log_id: int,
