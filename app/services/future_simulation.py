@@ -1,19 +1,30 @@
+
+def get_weekly_growth(consistency):
+
+    if consistency >= 80:
+        return 0.25
+
+    elif consistency >= 60:
+        return 0.15
+
+    elif consistency >= 40:
+        return 0.05
+
+    else:
+        return 0
+
+
 def calculate_future_projection(
     current_daily_hours,
     target_extra_hours,
     consistency_percent,
     days=180
 ):
-
     current_hours = current_daily_hours
 
     target_hours = (
         current_daily_hours + target_extra_hours
     )
-
-    weekly_increase = 0.25
-
-    growth_factor = consistency_percent / 100
 
     total_current_hours = 0
     total_improved_hours = 0
@@ -29,10 +40,12 @@ def calculate_future_projection(
         # Every 7 days, consider improvement
         if day % 7 == 0:
 
-            increase = weekly_increase * growth_factor
+            weekly_increase = get_weekly_growth(
+                consistency_percent
+            )
 
             current_hours = min(
-                current_hours + increase,
+                current_hours + weekly_increase,
                 target_hours
             )
 

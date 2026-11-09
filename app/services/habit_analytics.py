@@ -118,3 +118,52 @@ def calculate_recent_consistency(logs, days=7):
     ) * 100
 
     return round(consistency, 2)
+
+
+def calculate_daily_score(habits, logs, target_date):
+
+    # Get habits that existed on target date
+    active_habits = [
+        habit for habit in habits
+        if habit.created_at.date() <= target_date
+    ]
+
+    # Store completion status for quick lookup
+    log_lookup = {
+        log.habit_id: log.completed
+        for log in logs
+        if log.log_date == target_date
+    }
+
+    total_habits = len(active_habits)
+
+    completed_habits = sum(
+        1
+        for habit in active_habits
+        if log_lookup.get(habit.id, False)
+    )
+
+    pending_habits = total_habits - completed_habits
+
+    score = (
+        (completed_habits / total_habits) * 100
+        if total_habits > 0 else 0
+    )
+
+    habit_details = [
+        {
+            "habit_id": habit.id,
+            "habit_name": habit.name,
+            "completed": log_lookup.get(habit.id, False)
+        }
+        for habit in active_habits
+    ]
+
+    return {
+        "date": target_date,
+        "total_habits": total_habits,
+        "completed_habits": completed_habits,
+        "pending_habits": pending_habits,
+        "score": round(score, 2),
+        "habits": habit_details
+    }
