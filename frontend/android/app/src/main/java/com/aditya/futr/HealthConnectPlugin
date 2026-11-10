@@ -1,0 +1,9 @@
+package com.aditya.futr;
+
+import com.getcapacitor.Plugin;
+import com.getcapacitor.annotation.CapacitorPlugin;
+
+@CapacitorPlugin(name = "HealthConnect")
+public class HealthConnectPlugin extends Plugin {
+
+}
