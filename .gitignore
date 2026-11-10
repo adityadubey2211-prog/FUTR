@@ -21,3 +21,9 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+# Extra incomplete Android folder
+/android/
+
+# Android build
+/frontend/android/.gradle/
+/frontend/android/**/build/
