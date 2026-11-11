@@ -1,22 +1,49 @@
 # FUTR 🚀
-### Build Better Habits. Track Your Present. Shape Your Future.
+### Understand Your Habits. Explore Your Future.
 
-**FUTR** is a personal habit and productivity tracking application designed to help users build consistency, monitor daily performance, and understand how small daily actions can shape their long-term future.
+**FUTR** is a personal habit and lifestyle tracking application designed to help people build consistency, understand their daily behavior, and visualize how small actions can shape their future.
 
-Built with **React, FastAPI, and native Android integration**, FUTR combines habit management, consistency analytics, activity tracking, and future simulations in one platform.
+Instead of simply tracking what you do today, FUTR helps you explore what your current habits could mean for tomorrow.
+
+Built with **React, FastAPI, and Android integration**, FUTR brings habit management, lifestyle tracking, productivity analytics, nutrition planning, mindfulness, and future simulations together in one platform.
 
 ---
 
 ## ✨ Features
 
-- **Habit Management** — Create and manage personalized daily habits.
-- **Daily Habit Tracking** — Mark habits as completed or pending for each day.
-- **Consistency Analytics** — Monitor completion rates and daily performance.
-- **Daily Progress Dashboard** — Track productivity scores and overall progress.
-- **Activity Heatmap** — Visualize consistency and activity over time.
-- **Future Simulation** — Explore potential long-term improvements based on consistency.
-- **Native Step Tracking** — Track daily steps using Android's native step sensor.
-- **Android Application** — Access FUTR through a Capacitor-powered Android app.
+### 🎯 Habit Management
+- Create and manage personalized daily habits.
+- Mark habits as completed or pending.
+- Track daily habit performance.
+- Monitor consistency over time.
+
+### 📊 Productivity Dashboard
+- Daily productivity score.
+- Habit completion statistics.
+- Weekly performance analytics.
+- Activity heatmap to visualize consistency.
+
+### 🔮 Future Simulation
+- Explore potential long-term outcomes based on current habits.
+- Simulate different consistency levels.
+- Compare current progress with improved routines.
+- Visualize the impact of small daily improvements over time.
+
+### 🥗 Weekly Nutrition
+- Generate a personalized 7-day meal plan using AI.
+- Review and edit generated meal plans.
+- Organize meals across the week.
+- Save nutrition plans for future reference.
+
+### 🧘 Mindfulness Sessions
+- Dedicated mindfulness experience.
+- Guided breathing visual.
+- Start and track mindfulness sessions.
+- Encourage regular breaks and mental refreshment.
+
+### 👟 Activity Tracking
+- Native Android step tracking using the device's step sensor.
+- Mobile integration through Capacitor.
 
 ---
 
@@ -28,6 +55,7 @@ Built with **React, FastAPI, and native Android integration**, FUTR combines hab
 | Backend | Python, FastAPI |
 | Database | SQLite, SQLAlchemy |
 | Validation | Pydantic |
+| AI Integration | Google Gemini API |
 | Mobile Integration | Capacitor, Android, Java |
 | API Communication | REST APIs |
 
@@ -47,7 +75,8 @@ FUTR/
 │   │   ├── database.py
 │   │   └── main.py
 │   │
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── .env
 │
 ├── frontend/
 │   ├── android/
@@ -67,8 +96,11 @@ FUTR/
 
 ### Prerequisites
 
+Make sure you have the following installed:
+
 - Python 3.10+
 - Node.js and npm
+- Git
 - Android Studio (for Android development)
 
 ### 1. Clone the Repository
@@ -80,15 +112,22 @@ cd FUTR
 
 ### 2. Backend Setup
 
+Navigate to the backend directory:
+
 ```bash
 cd backend
+```
 
+Create a virtual environment:
+
+```bash
 python -m venv venv
 ```
 
-Activate the virtual environment:
+Activate it:
 
-**Windows:**
+**Windows PowerShell**
+
 ```powershell
 .\venv\Scripts\Activate.ps1
 ```
@@ -99,26 +138,43 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Start the backend:
+Create a `.env` file inside the `backend` directory and add the required environment variables:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+Start the backend server:
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-Backend:
+Backend URL:
+
 `http://127.0.0.1:8000`
 
-API Documentation:
+Interactive API Documentation:
+
 `http://127.0.0.1:8000/docs`
 
 ### 3. Frontend Setup
 
-Open another terminal:
+Open another terminal and navigate to the frontend:
 
 ```bash
 cd frontend
+```
 
+Install dependencies:
+
+```bash
 npm install
+```
+
+Start the development server:
+
+```bash
 npm run dev
 ```
 
@@ -126,7 +182,7 @@ Open the local URL provided by Vite.
 
 ### 4. Android Setup
 
-The Android project is located inside `frontend/android`.
+The Android project is available inside `frontend/android`.
 
 Build the frontend:
 
@@ -134,13 +190,37 @@ Build the frontend:
 npm run build
 ```
 
-Synchronize Capacitor:
+Synchronize the Capacitor project:
 
 ```bash
 npx cap sync android
 ```
 
-Open the Android project in Android Studio to build and run the application.
+Open the Android project:
+
+```bash
+npx cap open android
+```
+
+You can then build and run the application through Android Studio.
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Daily habit creation and tracking.
+- [x] Productivity dashboard.
+- [x] Consistency analytics.
+- [x] Activity heatmap.
+- [x] Future simulation.
+- [x] AI-powered weekly nutrition planning.
+- [x] Mindfulness session experience.
+- [x] Capacitor Android integration.
+- [ ] Manual step entry for web users.
+- [ ] Enhanced Health Connect integration.
+- [ ] More detailed lifestyle insights.
+- [ ] Improved future projections.
+- [ ] Additional mobile capabilities.
 
 ---
 
@@ -148,23 +228,7 @@ Open the Android project in Android Studio to build and run the application.
 
 **FUTR is actively under development.**
 
-Current development priorities include:
-
-- Improving habit tracking and analytics.
-- Enhancing native Android activity tracking.
-- Improving the dashboard and user experience.
-- Expanding future simulation capabilities.
-
----
-
-## 🔮 Roadmap
-
-- [ ] Manual step entry for web users.
-- [ ] Enhanced Health Connect integration.
-- [ ] Weekly nutrition and diet tracking.
-- [ ] More detailed productivity insights.
-- [ ] Improved future projections.
-- [ ] Additional mobile capabilities.
+The project is continuously evolving with a focus on improving lifestyle tracking, user experience, analytics, and mobile capabilities.
 
 ---
 
@@ -173,13 +237,14 @@ Current development priorities include:
 **Aditya Dubey**
 
 - GitHub: [@adityadubey2211-prog](https://github.com/adityadubey2211-prog)
+- LinkedIn: [Aditya Dubey](https://linkedin.com/in/aditya-dubey-4182432a4/)
 
 ---
 
 <div align="center">
 
-### FUTR 🌱
+# FUTR 🌱
 
-*Small actions today. A better future tomorrow.*
+**Small actions today. A better future tomorrow.**
 
 </div>
