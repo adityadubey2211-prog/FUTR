@@ -822,3 +822,522 @@
     transition-duration:.01ms !important;
   }
 }
+
+/* ══════════════════════════════════════
+   MINDFULNESS SESSION
+══════════════════════════════════════ */
+
+.mindfulness-session-panel {
+  margin-top: 24px;
+  position: relative;
+  overflow: hidden;
+  background: var(--future-bg);
+}
+
+.mindfulness-session-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mindfulness-session-heading h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 23px;
+  margin: 8px 0 5px;
+}
+
+.mindfulness-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.mindfulness-session-icon {
+  font-size: 38px;
+  color: var(--accent);
+}
+
+.mindfulness-start-area {
+  text-align: center;
+  padding: 28px 10px 12px;
+}
+
+.mindfulness-start-area p {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
+.mindfulness-start-btn,
+.mindfulness-actions button,
+.mindfulness-confirm-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 22px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .25s;
+}
+
+.mindfulness-start-btn:hover,
+.mindfulness-actions button:hover,
+.mindfulness-confirm-btn:hover {
+  background: var(--accent-strong);
+  transform: translateY(-2px);
+}
+
+.mindfulness-start-btn span {
+  margin-right: 8px;
+}
+
+.mindfulness-active {
+  max-width: 420px;
+  margin: 25px auto 5px;
+  text-align: center;
+}
+
+.mindfulness-timer {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(48px, 8vw, 68px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-strong);
+  letter-spacing: 3px;
+}
+
+.mindfulness-timer-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 5px 0 20px;
+}
+
+.mindfulness-progress-track {
+  height: 7px;
+  background: var(--track);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mindfulness-progress-track span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--accent-2),
+    var(--accent-strong)
+  );
+  border-radius: inherit;
+  transition: width .3s linear;
+}
+
+.mindfulness-session-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 10px;
+}
+
+.mindfulness-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.mindfulness-actions .mindfulness-end-btn {
+  background: var(--chip);
+  color: var(--text);
+}
+
+.mindfulness-actions .mindfulness-end-btn:hover {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.mindfulness-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(20, 16, 13, .55);
+  backdrop-filter: blur(7px);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  animation: fadeIn .2s ease;
+}
+
+.mindfulness-modal {
+  width: 100%;
+  max-width: 390px;
+  padding: 30px;
+  border-radius: 22px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, .2);
+  text-align: center;
+  position: relative;
+  animation: riseIn .35s ease both;
+}
+
+.mindfulness-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--chip);
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.mindfulness-modal-icon {
+  display: block;
+  font-size: 35px;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.mindfulness-modal h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 25px;
+  margin: 10px 0;
+}
+
+.mindfulness-modal > p:not(.eyebrow) {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 22px;
+}
+
+.mindfulness-target-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.mindfulness-target-input input {
+  width: 100px;
+  padding: 12px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  border-radius: 12px;
+  outline: none;
+  font: inherit;
+  font-size: 22px;
+  text-align: center;
+}
+
+.mindfulness-target-input input:focus {
+  border-color: var(--accent);
+}
+
+.mindfulness-target-input span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mindfulness-presets {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.mindfulness-presets button {
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--muted);
+  padding: 8px 13px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.mindfulness-presets button.selected {
+  background: var(--hover);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.mindfulness-confirm-btn {
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  .mindfulness-modal {
+    padding: 25px 18px;
+  }
+
+  .mindfulness-session-info {
+    font-size: 9px;
+  }
+}
+
+.cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 260px;
+  pointer-events: none;
+  z-index: 9999;
+
+  background: radial-gradient(
+    circle,
+    rgba(218, 177, 145, 0.10) 0%,
+    rgba(218, 177, 145, 0.045) 35%,
+    transparent 70%
+  );
+
+  transform: translate3d(
+    var(--cursor-x, -300px),
+    var(--cursor-y, -300px),
+    0
+  ) translate(-50%, -50%);
+
+  opacity: 0;
+  transition: opacity 250ms ease, transform 120ms ease-out;
+  will-change: transform;
+}
+
+html.cursor-active .cursor-glow {
+  opacity: 1;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .cursor-glow {
+    display: none;
+  }
+}
+
+.consistency-panel {
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+.heatmap-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding: 12px 0;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 12px);
+  grid-auto-columns: 12px;
+  gap: 5px;
+  width: max-content;
+}
+
+.heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.3);
+}
+
+.heatmap-cell.level-0 {
+  background: rgba(218, 177, 145, 0.09);
+}
+
+.heatmap-cell.level-1 {
+  background: #705447;
+}
+
+.heatmap-cell.level-2 {
+  background: #a7795d;
+}
+
+.heatmap-cell.level-3 {
+  background: #c99b78;
+}
+
+.heatmap-cell.level-4 {
+  background: #e7c4a2;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--muted, #a99a8d);
+  font-size: 11px;
+}
+.consistency-panel {
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+.heatmap-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding: 12px 0;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 12px);
+  grid-auto-columns: 12px;
+  gap: 5px;
+  width: max-content;
+}
+
+.heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  transition: transform 150ms ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.3);
+}
+
+.heatmap-cell.level-0 { background: rgba(218, 177, 145, 0.09); }
+.heatmap-cell.level-1 { background: #705447; }
+.heatmap-cell.level-2 { background: #a7795d; }
+.heatmap-cell.level-3 { background: #c99b78; }
+.heatmap-cell.level-4 { background: #e7c4a2; }
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--muted, #a99a8d);
+  font-size: 11px;
+}
+
+.consistency-panel {
+  margin-top: 24px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.heatmap-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding: 12px 0 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #705447 transparent;
+}
+
+ .heatmap-calendar {
+  width: 100%;
+  min-width: 680px;
+}
+
+.heatmap-months {
+  display: grid;
+  width: 100%;
+  column-gap: 5px;
+  margin-bottom: 9px;
+  min-height: 16px;
+  color: var(--muted, #a99a8d);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.heatmap-grid {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 53 / 7;
+  grid-template-rows: repeat(7, minmax(0, 1fr));
+  grid-auto-flow: column;
+  gap: 5px;
+}
+
+.heatmap-cell {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  border-radius: 3px;
+  transition: transform 150ms ease;
+}
+.heatmap-months span {
+  white-space: nowrap;
+}
+
+.heatmap-cell:not(.heatmap-empty):hover {
+  transform: scale(1.3);
+}
+
+.heatmap-cell.level-0 {
+  background: rgba(218, 177, 145, 0.09);
+}
+
+.heatmap-cell.level-1 {
+  background: #705447;
+}
+
+.heatmap-cell.level-2 {
+  background: #a7795d;
+}
+
+.heatmap-cell.level-3 {
+  background: #c99b78;
+}
+
+.heatmap-cell.level-4 {
+  background: #e7c4a2;
+}
+
+.heatmap-empty {
+  visibility: hidden;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--muted, #a99a8d);
+  font-size: 11px;
+}
+
+@media (max-width: 600px) {
+  .heatmap-scroll {
+    padding-bottom: 12px;
+  }
+
+  .heatmap-calendar {
+    min-width: max-content;
+  }
+}
+
+/* Fix heatmap legend squares */
+.heatmap-legend .heatmap-cell {
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  min-height: 12px;
+  flex: 0 0 12px;
+  aspect-ratio: auto;
+  border-radius: 3px;
+}

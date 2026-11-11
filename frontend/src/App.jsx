@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import "./App.css";
+import "./Nutrition.css";
 
 /* ─────────────── NATIVE PLUGIN ─────────────── */
 
@@ -13,13 +14,21 @@ const HABITS_KEY = "futr.habits.v2";
 const METRICS_KEY = "futr.metrics.v2";
 const THEME_KEY = "futr.theme.v1";
 const CATEGORIES = ["Learning", "Personal", "Fitness", "Health"];
-const TODAY = new Date().toISOString().slice(0, 10);
+function toLocalISODate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+const TODAY = toLocalISODate(new Date());
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+const NUTRITION_CHECKS_KEY = "futr.nutrition.checks.v1";
 
 const METRIC_DEFS = [
   { id: "sleep", icon: "☾", name: "Sleep", unit: "hours", step: 0.5, max: 24, placeholder: "7.5" },
   { id: "steps", icon: "👟", name: "Steps", unit: "steps", step: 100, max: 50000, placeholder: "6000" },
   { id: "mindfulness", icon: "❋", name: "Mindfulness", unit: "minutes", step: 5, max: 180, placeholder: "20" },
-  { id: "focus", icon: "◈", name: "Focus", unit: "hours", step: 0.5, max: 16, placeholder: "4" },
 ];
 
 const DEFAULT_METRICS = Object.fromEntries(
@@ -51,7 +60,7 @@ const TABS = [
   ["◉", "Metrics"],
   ["▦", "Analytics"],
 ];
-
+const MINDFULNESS_SESSION_KEY = "futr.mindfulness.session.v1";
 /* ─────────────── HELPERS ─────────────── */
 
 function loadJSON(key, fallback) {
@@ -489,6 +498,530 @@ function MetricPill({ def, data, nativeSteps }) {
   );
 }
 
+function MindfulnessTimer({ onComplete }) {
+  const [showSetup, setShowSetup] = useState(false);
+  const [targetInput, setTargetInput] = useState("10");
+  const [clock, setClock] = useState(Date.now());
+
+  const [session, setSession] = useState(() => {
+    const saved = loadJSON(MINDFULNESS_SESSION_KEY, null);
+    if (!saved || saved.date !== TODAY) return null;
+    return saved;
+  });
+
+  // Save active session in localStorage
+  useEffect(() => {
+    if (session) {
+      saveJSON(MINDFULNESS_SESSION_KEY, session);
+    } else {
+      localStorage.removeItem(MINDFULNESS_SESSION_KEY);
+    }
+  }, [session]);
+
+  // Update timer every second
+  useEffect(() => {
+    if (!session || session.paused) return;
+
+    const interval = setInterval(() => {
+      setClock(Date.now());
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, [session]);
+
+  const elapsedSeconds = session
+    ? session.elapsedSeconds +
+      (session.paused
+        ? 0
+        : Math.max(0, Math.floor((clock - session.startedAt) / 1000)))
+    : 0;
+
+  const targetSeconds = session
+    ? session.targetMinutes * 60
+    : 0;
+
+  const remainingSeconds = Math.max(
+    0,
+    targetSeconds - elapsedSeconds
+  );
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
+
+  const finishSession = (seconds) => {
+    const minutes = Math.round((seconds / 60) * 10) / 10;
+
+    if (minutes > 0) {
+      onComplete(minutes);
+    }
+
+    setSession(null);
+  };
+
+  // Automatically finish when target is reached
+  useEffect(() => {
+    if (
+      session &&
+      !session.paused &&
+      elapsedSeconds >= targetSeconds
+    ) {
+      finishSession(targetSeconds);
+    }
+  }, [elapsedSeconds, targetSeconds, session]);
+
+  const startSession = (e) => {
+    e.preventDefault();
+
+    const target = Number(targetInput);
+
+    if (!Number.isFinite(target) || target < 1 || target > 180) {
+      return;
+    }
+
+    setSession({
+      date: TODAY,
+      targetMinutes: target,
+      elapsedSeconds: 0,
+      startedAt: Date.now(),
+      paused: false,
+    });
+
+    setClock(Date.now());
+    setShowSetup(false);
+  };
+
+  const pauseSession = () => {
+    setSession((current) => {
+      if (!current || current.paused) return current;
+
+      const elapsed =
+        current.elapsedSeconds +
+        Math.max(
+          0,
+          Math.floor((Date.now() - current.startedAt) / 1000)
+        );
+
+      return {
+        ...current,
+        elapsedSeconds: elapsed,
+        paused: true,
+      };
+    });
+  };
+
+
+  const resumeSession = () => {
+    setSession((current) => {
+      if (!current || !current.paused) return current;
+
+      return {
+        ...current,
+        startedAt: Date.now(),
+        paused: false,
+      };
+    });
+
+    setClock(Date.now());
+  };
+
+  const progress = session
+    ? Math.min(100, (elapsedSeconds / targetSeconds) * 100)
+    : 0;
+
+  return (
+    <>
+      <section className="panel mindfulness-session-panel reveal">
+
+        <div className="mindfulness-session-heading">
+          <div>
+            <p className="eyebrow">
+              SLOW DOWN · RESET · REFRESH
+            </p>
+
+            <h2>Mindfulness Session</h2>
+
+            <p className="mindfulness-subtitle">
+              Take a little time for yourself.
+            </p>
+          </div>
+
+          <span className="mindfulness-session-icon">❋</span>
+        </div>
+
+        {session ? (
+          <div className="mindfulness-active">
+
+            <div className="mindfulness-timer">
+              {formatTime(remainingSeconds)}
+            </div>
+
+            <p className="mindfulness-timer-label">
+              {session.paused
+                ? "Session paused"
+                : "Breathe. Stay present."}
+            </p>
+
+            <div className="mindfulness-progress-track">
+              <span style={{ width: `${progress}%` }} />
+            </div>
+
+            <div className="mindfulness-session-info">
+              <span>
+                Target: {session.targetMinutes} min
+              </span>
+
+              <span>
+                Elapsed: {formatTime(elapsedSeconds)}
+              </span>
+            </div>
+
+            <div className="mindfulness-actions">
+
+              {session.paused ? (
+                <button onClick={resumeSession}>
+                  Resume
+                </button>
+              ) : (
+                <button onClick={pauseSession}>
+                  Pause
+                </button>
+              )}
+
+              <button
+                className="mindfulness-end-btn"
+                onClick={() => finishSession(elapsedSeconds)}
+              >
+                End session
+              </button>
+
+            </div>
+          </div>
+        ) : (
+          <div className="mindfulness-start-area">
+
+            <p>
+              Give your mind a break. Even a few mindful
+              minutes can make a difference.
+            </p>
+
+            <button
+              className="mindfulness-start-btn"
+              onClick={() => setShowSetup(true)}
+            >
+              <span>▶</span> Start Session
+            </button>
+
+          </div>
+        )}
+
+      </section>
+
+      {showSetup && (
+        <div
+          className="mindfulness-modal-overlay"
+          onClick={() => setShowSetup(false)}
+        >
+          <div
+            className="mindfulness-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            <button
+              className="mindfulness-modal-close"
+              onClick={() => setShowSetup(false)}
+            >
+              ×
+            </button>
+
+            <span className="mindfulness-modal-icon">❋</span>
+
+            <p className="eyebrow">
+              YOUR MOMENT OF CALM
+            </p>
+
+            <h2>Set your intention.</h2>
+
+            <p>
+              How many minutes would you like to meditate?
+            </p>
+
+            <form onSubmit={startSession}>
+
+              <div className="mindfulness-target-input">
+                <input
+                  type="number"
+                  min="1"
+                  max="180"
+                  value={targetInput}
+                  onChange={(e) =>
+                    setTargetInput(e.target.value)
+                  }
+                  required
+                />
+
+                <span>minutes</span>
+              </div>
+
+              <div className="mindfulness-presets">
+                {[5, 10, 15, 20, 30].map((minutes) => (
+                  <button
+                    type="button"
+                    key={minutes}
+                    className={
+                      Number(targetInput) === minutes
+                        ? "selected"
+                        : ""
+                    }
+                    onClick={() =>
+                      setTargetInput(String(minutes))
+                    }
+                  >
+                    {minutes}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                className="mindfulness-confirm-btn"
+                type="submit"
+              >
+                Begin meditation →
+              </button>
+
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ─────────────── NUTRITION ─────────────── */
+
+const NUTRITION_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const NUTRITION_MEALS = ["Breakfast", "Lunch", "Evening Meal", "Snacks"];
+
+function getCurrentWeekDates() {
+  const today = new Date();
+  const monday = new Date(today);
+  const offset = (today.getDay() + 6) % 7;
+  monday.setDate(today.getDate() - offset);
+  monday.setHours(0, 0, 0, 0);
+
+  return NUTRITION_DAYS.map((day, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    return { day, iso: toLocalISODate(date), shortDate: date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) };
+  });
+}
+
+function NutritionSection() {
+  const weekDates = getCurrentWeekDates();
+  const todayIndex = Math.max(0, weekDates.findIndex((item) => item.iso === TODAY));
+  const [selectedDay, setSelectedDay] = useState(NUTRITION_DAYS[todayIndex]);
+  const [plan, setPlan] = useState(null);
+  const [planId, setPlanId] = useState(null);
+  const [checks, setChecks] = useState(() => loadJSON(NUTRITION_CHECKS_KEY, {}));
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    saveJSON(NUTRITION_CHECKS_KEY, checks);
+  }, [checks]);
+
+  useEffect(() => {
+    let active = true;
+    const loadSavedPlan = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/nutrition/plans/`);
+        if (!response.ok) throw new Error(`Could not load saved diet plans (${response.status})`);
+        const plans = await response.json();
+        if (!active || !Array.isArray(plans) || plans.length === 0) return;
+        const latest = plans[plans.length - 1];
+        setPlan({ name: latest.name, description: latest.description || "", meals: latest.meals || [] });
+        setPlanId(latest.id);
+      } catch (err) {
+        console.error("Nutrition plan load failed:", err);
+        // Keep the rest of the dashboard usable when the backend is offline.
+      }
+    };
+    loadSavedPlan();
+    return () => { active = false; };
+  }, []);
+
+  const selectedDate = weekDates.find((item) => item.day === selectedDay) || weekDates[todayIndex];
+  const dayMeals = plan?.meals?.filter((meal) => String(meal.day).toLowerCase() === selectedDay.toLowerCase()) || [];
+  const completionKey = (meal, index) => `${selectedDate.iso}:${meal.id ?? `${meal.meal_type}-${index}`}`;
+  const completedCount = dayMeals.filter((meal, index) => Boolean(checks[completionKey(meal, index)])).length;
+
+  const updateMeal = (index, field, value) => {
+    setPlan((current) => ({
+      ...current,
+      meals: current.meals.map((meal, mealIndex) => mealIndex === index ? { ...meal, [field]: value } : meal),
+    }));
+  };
+
+  const uploadAndExtract = async (event) => {
+    event.preventDefault();
+    if (!file) {
+      setError("Choose your weekly diet PDF first.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setMessage("Sending PDF to Gemini for diet extraction...");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(`${API_BASE}/nutrition/extract-pdf/`, { method: "POST", body: formData });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.detail || result.message || "Diet extraction failed.");
+      const extracted = result.diet_plan;
+      if (!extracted || !Array.isArray(extracted.meals)) throw new Error("Gemini response did not contain a valid meal list.");
+      setPlan({
+        name: extracted.plan_name || file.name.replace(/\.pdf$/i, ""),
+        description: extracted.description || "",
+        meals: extracted.meals.map((meal) => ({ ...meal })),
+      });
+      setPlanId(null);
+      setMessage(`Extracted ${extracted.meals.length} meal entries. Review and edit them, then save your plan.`);
+      setSelectedDay(NUTRITION_DAYS[todayIndex]);
+    } catch (err) {
+      setError(err.message || "Unable to extract this PDF.");
+      setMessage("");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const savePlan = async () => {
+    if (!plan || !plan.meals.length) return;
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      const payload = {
+        name: plan.name?.trim() || "My Weekly Diet Plan",
+        source: "upload",
+        description: plan.description || "",
+        meals: plan.meals.map(({ day, meal_type, meal_name, food_items }) => ({ day, meal_type, meal_name, food_items: food_items || "" })),
+      };
+      const url = planId ? `${API_BASE}/nutrition/plans/${planId}` : `${API_BASE}/nutrition/plans/`;
+      const response = await fetch(url, {
+        method: planId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.detail || "Could not save the diet plan.");
+      setPlan({ name: result.name, description: result.description || "", meals: result.meals || plan.meals });
+      setPlanId(result.id);
+      setMessage("Your weekly diet plan has been saved.");
+    } catch (err) {
+      setError(err.message || "Could not save the diet plan.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleMeal = (meal, index, checked) => {
+    const key = completionKey(meal, index);
+    setChecks((current) => ({ ...current, [key]: checked }));
+  };
+
+  return (
+    <section className="panel nutrition-panel reveal">
+      <div className="nutrition-header">
+        <div>
+          <p className="eyebrow">FUEL YOUR DAY</p>
+          <h2>Weekly Nutrition</h2>
+          <p className="nutrition-subtitle">Your diet, one meal at a time.</p>
+        </div>
+        <span className="nutrition-icon">✳</span>
+      </div>
+
+      <form className="nutrition-upload" onSubmit={uploadAndExtract}>
+        <label className="nutrition-file-label">
+          <span>＋ Upload weekly diet PDF</span>
+          <input type="file" accept="application/pdf,.pdf" onChange={(event) => { setFile(event.target.files?.[0] || null); setError(""); }} />
+        </label>
+        <span className="nutrition-file-name">{file ? file.name : "PDF only"}</span>
+        <button type="submit" disabled={loading || !file}>{loading ? "Extracting..." : "Extract with Gemini"}</button>
+      </form>
+
+      {message && <p className="nutrition-message">{message}</p>}
+      {error && <p className="nutrition-error">{error}</p>}
+
+      {plan ? (
+        <>
+          <div className="nutrition-plan-heading">
+            <div>
+              <label htmlFor="nutrition-plan-name">DIET PLAN NAME</label>
+              <input id="nutrition-plan-name" value={plan.name || ""} onChange={(event) => setPlan((current) => ({ ...current, name: event.target.value }))} />
+            </div>
+            <button type="button" className="nutrition-save-btn" onClick={savePlan} disabled={saving}>{saving ? "Saving..." : planId ? "Update plan" : "Save diet plan"}</button>
+          </div>
+
+          <div className="nutrition-day-tabs">
+            {weekDates.map(({ day, shortDate }) => (
+              <button type="button" key={day} className={selectedDay === day ? "active" : ""} onClick={() => setSelectedDay(day)}>
+                <span>{day.slice(0, 3)}</span><small>{shortDate}</small>
+              </button>
+            ))}
+          </div>
+
+          <div className="nutrition-day-heading">
+            <div><h3>{selectedDay}</h3><span>{selectedDate.shortDate}</span></div>
+            <span className="nutrition-progress">{completedCount}/{dayMeals.length} meals done</span>
+          </div>
+
+          {dayMeals.length > 0 ? (
+            <div className="nutrition-table-wrap">
+              <table className="nutrition-table">
+                <thead><tr><th>Meal</th><th>Food / Diet</th><th>Done</th></tr></thead>
+                <tbody>
+                  {dayMeals.map((meal, index) => {
+                    const originalIndex = plan.meals.indexOf(meal);
+                    const key = completionKey(meal, index);
+                    return (
+                      <tr key={meal.id ?? `${meal.day}-${meal.meal_type}-${index}`} className={checks[key] ? "meal-completed" : ""}>
+                        <td>
+                          <input aria-label={`${meal.meal_type} meal type`} className="nutrition-meal-type" value={meal.meal_type || ""} onChange={(event) => updateMeal(originalIndex, "meal_type", event.target.value)} />
+                        </td>
+                        <td>
+                          <input aria-label={`${meal.meal_type} meal name`} className="nutrition-meal-name" value={meal.meal_name || ""} onChange={(event) => updateMeal(originalIndex, "meal_name", event.target.value)} placeholder="Meal name" />
+                          <textarea aria-label="Food items" value={meal.food_items || ""} onChange={(event) => updateMeal(originalIndex, "food_items", event.target.value)} placeholder="Food items" rows={2} />
+                        </td>
+                        <td className="nutrition-check-cell"><input type="checkbox" checked={Boolean(checks[key])} onChange={(event) => toggleMeal(meal, index, event.target.checked)} aria-label={`Mark ${meal.meal_type} complete`} /></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="nutrition-empty-day">No meals found for {selectedDay}. You can add meals after extraction or check your uploaded plan.</div>
+          )}
+        </>
+      ) : (
+        <div className="nutrition-empty">
+          <span>🥗</span>
+          <h3>Your weekly diet starts here</h3>
+          <p>Upload your diet PDF. Gemini will organise it from Monday to Sunday, then you can review and save it.</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 /* ─────────────── MAIN APP ─────────────── */
 
 export default function App() {
@@ -520,6 +1053,38 @@ export default function App() {
   const [showInput, setShowInput] = useState(false);
   const [extraHours, setExtraHours] = useState(2);
   const [mounted, setMounted] = useState(false);
+
+  // Subtle mouse-follow glow (desktop only)
+  useEffect(() => {
+    const moveCursor = (e) => {
+      if (e.pointerType !== "mouse") return;
+
+      document.documentElement.style.setProperty(
+        "--cursor-x",
+        `${e.clientX}px`
+      );
+
+      document.documentElement.style.setProperty(
+        "--cursor-y",
+        `${e.clientY}px`
+      );
+
+      document.documentElement.classList.add("cursor-active");
+    };
+
+    const hideCursor = () => {
+      document.documentElement.classList.remove("cursor-active");
+    };
+
+    window.addEventListener("pointermove", moveCursor);
+    document.addEventListener("mouseleave", hideCursor);
+
+    return () => {
+      window.removeEventListener("pointermove", moveCursor);
+      document.removeEventListener("mouseleave", hideCursor);
+      document.documentElement.classList.remove("cursor-active");
+    };
+  }, []);
 
   // Native phone step count
   const [nativeSteps, setNativeSteps] = useState(null);
@@ -687,6 +1252,7 @@ export default function App() {
 
   return (
     <div className="app-shell" data-theme={theme}>
+      <div className="cursor-glow" />
       <div className="bg-blob blob-a" />
       <div className="bg-blob blob-b" />
 
@@ -910,6 +1476,31 @@ export default function App() {
                   ))}
                 </div>
               </section>
+
+              <NutritionSection />
+
+              <MindfulnessTimer
+                onComplete={(minutes) => {
+                  setMetrics((current) => {
+                    const previous =
+                      current.mindfulness.history[TODAY] ?? 0;
+              
+                    return {
+                      ...current,
+                      mindfulness: {
+                        ...current.mindfulness,
+                        history: {
+                          ...current.mindfulness.history,
+                          [TODAY]: Math.round(
+                            (previous + minutes) * 10
+                          ) / 10,
+                        },
+                      },
+                    };
+                  });
+                }}
+              />
+
 
               {/* HABITS + FUTURE */}
 

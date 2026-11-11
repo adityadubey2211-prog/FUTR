@@ -27,3 +27,21 @@ Thumbs.db
 # Android build
 /frontend/android/.gradle/
 /frontend/android/**/build/
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Android Gradle
+/frontend/android/.gradle/
