@@ -13,6 +13,9 @@ from app.models.nutrition import DietPlan, DietMeal
 from app.routes import nutrition
 from fastapi import UploadFile, File
 from app.services.nutrition_service import extract_pdf_text
+from app.models.future_report import FutureReport
+from app.routes import future_report
+
 Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="FUTR",
@@ -39,6 +42,7 @@ app.include_router(daily_score.router)
 app.include_router(analytics.router)
 app.include_router(dashboard.router)
 app.include_router(nutrition.router)
+app.include_router(future_report.router)
 
 
 @app.get("/")
