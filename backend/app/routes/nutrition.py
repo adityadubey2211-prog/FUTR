@@ -1,4 +1,7 @@
-from app.services.gemini_service import extract_diet_plan_with_gemini
+from app.services.gemini_service import (
+    extract_diet_plan_with_gemini,
+    generate_diet_plan_with_gemini
+)
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -10,11 +13,17 @@ from app.schemas.nutrition import (
 )
 from fastapi import UploadFile, File
 from app.services.nutrition_service import extract_pdf_text
+from app.schemas.nutrition import (
+    DietPlanCreate,
+    DietPlanResponse,
+    DietGenerationRequest
+)
 
 router = APIRouter(
     prefix="/nutrition",
     tags=["Nutrition"]
 )
+
 
 
 # CREATE DIET PLAN
@@ -193,4 +202,35 @@ async def extract_diet_pdf(file: UploadFile = File(...)):
         raise HTTPException(
             status_code=500,
             detail=str(error)
+        )
+        
+    
+# GENERATE AI DIET PLAN
+@router.post("/generate/")
+def generate_ai_diet_plan(
+    preferences: DietGenerationRequest
+):
+    try:
+        diet_plan = generate_diet_plan_with_gemini(
+            preferences.model_dump()
+        )
+
+        return {
+            "message": "AI diet plan generated successfully",
+            "source": "ai",
+            "diet_plan": diet_plan
+        }
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
+        )
+
+    except Exception as error:
+        print("GEMINI DIET GENERATION ERROR:", repr(error))
+
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to generate diet plan. Please try again."
         )
