@@ -1464,3 +1464,876 @@ html.cursor-active .cursor-glow {
 .nutrition-content {
   margin-top: 20px;
 }
+
+
+/* ══════════════════════════════════════
+   NUTRITION — AI DIET PLANNER
+══════════════════════════════════════ */
+
+.nutrition-panel {
+  margin-top: 24px;
+  overflow: hidden;
+  position: relative;
+}
+
+.nutrition-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.nutrition-header h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 23px;
+  margin: 5px 0;
+}
+
+.nutrition-icon {
+  font-size: 30px;
+  color: var(--accent);
+}
+
+.nutrition-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.nutrition-toggle-btn,
+.nutrition-save-btn {
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  padding: 10px 15px;
+  background: var(--chip);
+  color: var(--accent-strong);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .25s ease;
+}
+
+.nutrition-toggle-btn:hover,
+.nutrition-save-btn:hover {
+  transform: translateY(-2px);
+  background: var(--hover);
+}
+
+.nutrition-content {
+  margin-top: 22px;
+  animation: riseIn .4s ease both;
+}
+
+/* AI generator header */
+
+.nutrition-ai-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 18px;
+  border: 1px solid var(--panel-border);
+  border-radius: 15px;
+  background: linear-gradient(
+    120deg,
+    var(--chip),
+    var(--future-inner)
+  );
+  margin-bottom: 15px;
+}
+
+.nutrition-ai-header strong {
+  font-size: 13px;
+}
+
+.nutrition-ai-header p {
+  color: var(--muted);
+  font-size: 10px;
+  margin: 5px 0 0;
+}
+
+.nutrition-ai-header button {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 15px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .25s ease;
+}
+
+.nutrition-ai-header button:hover {
+  background: var(--accent-strong);
+  transform: translateY(-2px);
+}
+
+/* AI form */
+
+.nutrition-generator-form {
+  padding: 22px;
+  margin-bottom: 18px;
+  border: 1px solid var(--panel-border);
+  border-radius: 17px;
+  background: var(--future-inner);
+  animation: riseIn .35s ease both;
+}
+
+.nutrition-generator-form h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 19px;
+  margin: 0 0 6px;
+}
+
+.nutrition-generator-form > p {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 0 0 20px;
+}
+
+.nutrition-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.nutrition-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--soft);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.nutrition-form-grid input,
+.nutrition-form-grid select,
+.nutrition-form-grid textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 13px;
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  outline: none;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.nutrition-form-grid input:focus,
+.nutrition-form-grid select:focus,
+.nutrition-form-grid textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(169, 134, 112, .15);
+}
+
+.nutrition-form-grid select {
+  cursor: pointer;
+}
+
+.nutrition-form-grid select option {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.nutrition-form-grid textarea {
+  resize: vertical;
+  min-height: 85px;
+}
+
+.nutrition-full-width {
+  grid-column: 1 / -1;
+}
+
+.nutrition-generator-form button[type="submit"] {
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(
+    110deg,
+    var(--accent),
+    var(--accent-strong)
+  );
+  color: white;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .25s ease;
+}
+
+.nutrition-generator-form button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 18px var(--shadow-strong);
+}
+
+.nutrition-generator-form button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* PDF upload */
+
+.nutrition-upload {
+  padding: 18px;
+  margin-bottom: 18px;
+  border: 1px dashed var(--input-border);
+  border-radius: 15px;
+  background: var(--future-inner);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.nutrition-file-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  background: var(--chip);
+  color: var(--accent-strong);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.nutrition-file-label:hover {
+  background: var(--hover);
+}
+
+.nutrition-file-name {
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.nutrition-upload button {
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 15px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Messages */
+
+.nutrition-message,
+.nutrition-error {
+  padding: 11px 14px;
+  border-radius: 10px;
+  margin: 12px 0;
+  font-size: 11px;
+}
+
+.nutrition-message {
+  background: var(--good-bg);
+  color: var(--good);
+}
+
+.nutrition-error {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+/* Plan heading */
+
+.nutrition-plan-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 24px 0 17px;
+}
+
+.nutrition-plan-heading h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 20px;
+  margin: 0 0 5px;
+}
+
+.nutrition-plan-heading p {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 0;
+}
+
+.nutrition-save-btn {
+  background: var(--accent);
+  color: white;
+  border: 0;
+}
+
+/* Day navigation */
+
+.nutrition-day-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 5px 2px 12px;
+  scrollbar-width: thin;
+}
+
+.nutrition-day-tabs button {
+  flex: 1;
+  min-width: 75px;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--chip);
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.nutrition-day-tabs button:hover {
+  background: var(--hover);
+  color: var(--text-strong);
+}
+
+.nutrition-day-tabs button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-weight: 700;
+}
+
+/* Selected day and progress */
+
+.nutrition-day-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 15px 0 12px;
+}
+
+.nutrition-day-heading h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 18px;
+  margin: 0;
+}
+
+.nutrition-progress {
+  color: var(--accent-strong);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Meal table */
+
+.nutrition-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--panel-border);
+  border-radius: 13px;
+}
+
+.nutrition-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.nutrition-table th {
+  padding: 13px 12px;
+  background: var(--chip);
+  color: var(--soft);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.nutrition-table td {
+  padding: 13px 12px;
+  border-top: 1px solid var(--panel-border);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.nutrition-table input {
+  width: 100%;
+  min-width: 90px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+  transition: .2s;
+}
+
+.nutrition-table input:focus {
+  border-color: var(--accent);
+  background: var(--input-bg);
+}
+
+.nutrition-meal-type {
+  color: var(--accent-strong) !important;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.nutrition-meal-name {
+  font-weight: 600;
+}
+
+.nutrition-check-cell {
+  text-align: center;
+}
+
+.nutrition-check-cell input {
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.nutrition-table tr.meal-completed td {
+  opacity: .55;
+}
+
+.nutrition-table tr.meal-completed .nutrition-meal-name {
+  text-decoration: line-through;
+  text-decoration-color: var(--accent);
+}
+
+/* Empty state */
+
+.nutrition-empty,
+.nutrition-empty-day {
+  padding: 35px 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.nutrition-empty-day {
+  border: 1px dashed var(--input-border);
+  border-radius: 13px;
+  margin-top: 12px;
+}
+
+/* Responsive */
+
+@media (max-width: 650px) {
+  .nutrition-header {
+    align-items: flex-start;
+  }
+
+  .nutrition-header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .nutrition-ai-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nutrition-ai-header button {
+    width: 100%;
+  }
+
+  .nutrition-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nutrition-full-width {
+    grid-column: auto;
+  }
+
+  .nutrition-plan-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nutrition-save-btn {
+    width: 100%;
+  }
+
+  .nutrition-day-tabs button {
+    flex: 0 0 auto;
+  }
+
+  .nutrition-upload {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nutrition-upload button,
+  .nutrition-file-label {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nutrition-content,
+  .nutrition-generator-form {
+    animation: none;
+  }
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(53, 1fr);
+  gap: 3px;
+  max-width: 100%;
+}
+
+/* .heatmap-cell {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+} */
+
+.heatmap-header {
+  margin-bottom: 14px;
+}
+
+.heatmap-header h3 {
+  font-size: 17px;
+}
+
+.heatmap-header p {
+  font-size: 12px;
+}
+
+.heatmap-legend {
+  margin-top: 12px;
+  gap: 5px;
+}
+
+/* COMPACT HEATMAP */
+.heatmap-section {
+  margin-top: 24px;
+  padding: 16px 18px;
+}
+
+.heatmap-header {
+  margin-bottom: 10px;
+}
+
+.heatmap-header h3 {
+  font-size: 15px;
+}
+
+.heatmap-header p {
+  font-size: 10px;
+}
+
+.heatmap-header span {
+  font-size: 11px;
+}
+
+.heatmap-grid {
+  gap: 2px;
+}
+
+/* .heatmap-cell {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+} */
+
+.heatmap-legend {
+  margin-top: 9px;
+  gap: 4px;
+  font-size: 10px;
+}
+
+.heatmap-legend .heatmap-cell {
+  width: 7px;
+  height: 7px;
+}
+
+
+/* MINDFULNESS EXPERIENCE CARD — DARK THEME */
+
+.mindfulness-start-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 28px 32px;
+  border-radius: 20px;
+  background: linear-gradient(120deg, #292522, #211f1d);
+  border: 1px solid rgba(201, 166, 125, 0.16);
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+}
+
+.mindfulness-start-content {
+  flex: 1;
+  max-width: 520px;
+}
+
+.mindfulness-kicker {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #c49a70;
+  margin-bottom: 12px;
+}
+
+.mindfulness-start-content h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 25px;
+  color: #f3e9dc;
+  margin: 0 0 10px;
+}
+
+.mindfulness-start-content > p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #b5a597;
+  max-width: 390px;
+  margin-bottom: 16px;
+}
+
+.mindfulness-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mindfulness-benefits span {
+  font-size: 10px;
+  color: #d5b99b;
+  background: rgba(201, 166, 125, 0.10);
+  border: 1px solid rgba(201, 166, 125, 0.13);
+  padding: 7px 10px;
+  border-radius: 20px;
+}
+
+.mindfulness-start-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ad8765, #896647);
+  color: #fffaf4;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.mindfulness-start-btn:hover {
+  background: linear-gradient(135deg, #c19a75, #a27a58);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(173, 135, 101, 0.2);
+}
+
+.mindfulness-btn-arrow {
+  margin-left: 8px;
+}
+
+/* BREATHING ANIMATION */
+
+.mindfulness-breathing-visual {
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.breathing-orbit {
+  position: absolute;
+  border: 1px solid rgba(201, 166, 125, 0.28);
+  border-radius: 50%;
+  animation: breathe 5s ease-in-out infinite;
+}
+
+.orbit-one {
+  width: 125px;
+  height: 125px;
+}
+
+.orbit-two {
+  width: 165px;
+  height: 165px;
+  border-color: rgba(201, 166, 125, 0.16);
+  animation-delay: 0.5s;
+}
+
+.breathing-core {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d0ad88, #987352 65%, #75543d);
+  box-shadow:
+    0 0 25px rgba(190, 148, 105, 0.22),
+    inset 0 0 15px rgba(255,255,255,0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fffaf4;
+  animation: breathe 5s ease-in-out infinite;
+}
+
+.breathing-core span {
+  font-size: 27px;
+}
+
+.breathing-core small {
+  font-size: 8px;
+  letter-spacing: 2px;
+}
+
+.mindfulness-breathing-visual > p {
+  position: absolute;
+  bottom: -4px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #c09b78;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@media (max-width: 650px) {
+  .mindfulness-start-area {
+    padding: 22px;
+  }
+
+  .mindfulness-breathing-visual {
+    width: 105px;
+    height: 130px;
+  }
+
+  .orbit-one {
+    width: 85px;
+    height: 85px;
+  }
+
+  .orbit-two {
+    width: 110px;
+    height: 110px;
+  }
+
+  .breathing-core {
+    width: 65px;
+    height: 65px;
+  }
+
+  .breathing-core span {
+    font-size: 20px;
+  }
+
+  .mindfulness-start-content h3 {
+    font-size: 20px;
+  }
+}
+
+/* MINDFULNESS — FINAL COLOR MATCH */
+
+.mindfulness-start-area {
+  background: linear-gradient(
+    125deg,
+    #35291f 0%,
+    #30241c 55%,
+    #38291f 100%
+  );
+
+  border: 1px solid rgba(196, 154, 112, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+/* Main heading */
+.mindfulness-start-content h3 {
+  color: #f2e6d6;
+}
+
+/* Description */
+.mindfulness-start-content > p {
+  color: #c0ad9b;
+}
+
+/* Small kicker */
+.mindfulness-kicker {
+  color: #d0a477;
+}
+
+/* Benefit pills */
+.mindfulness-benefits span {
+  background: rgba(211, 171, 129, 0.09);
+  border: 1px solid rgba(211, 171, 129, 0.14);
+  color: #d9b995;
+}
+
+/* Start button */
+.mindfulness-start-btn {
+  background: linear-gradient(135deg, #bd9671, #98714f);
+  color: #fff8ef;
+}
+
+.mindfulness-start-btn:hover {
+  background: linear-gradient(135deg, #cba47e, #aa805b);
+}
+
+/* Breathing circles */
+.breathing-orbit {
+  border-color: rgba(207, 165, 123, 0.28);
+}
+
+.orbit-two {
+  border-color: rgba(207, 165, 123, 0.16);
+}
+
+/* Breathing orb */
+.breathing-core {
+  background: radial-gradient(
+    circle at 35% 30%,
+    #dfb991,
+    #b58a63 65%,
+    #896344
+  );
+
+  box-shadow:
+    0 0 30px rgba(190, 148, 105, 0.2),
+    inset 0 0 15px rgba(255, 255, 255, 0.12);
+}
+
+.mindfulness-breathing-visual > p {
+  color: #cba47e;
+}

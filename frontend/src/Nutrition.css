@@ -66,3 +66,162 @@
   .nutrition-save-btn { width:100%; }
   .nutrition-day-heading { align-items:flex-start; }
 }
+
+/* ─────────────── AI NUTRITION GENERATOR ─────────────── */
+
+.nutrition-ai-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  margin-top: 20px;
+  border: 1px solid var(--panel-border);
+  border-radius: 13px;
+  background: var(--future-inner);
+}
+
+.nutrition-ai-header strong {
+  font-size: 13px;
+}
+
+.nutrition-ai-header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.nutrition-ai-header button {
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.nutrition-ai-header button:hover {
+  background: var(--accent-strong);
+  transform: translateY(-2px);
+}
+
+.nutrition-generator-form {
+  margin-top: 14px;
+  padding: 20px;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: var(--future-inner);
+  animation: riseIn .35s ease both;
+}
+
+.nutrition-generator-form h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 19px;
+  margin: 0 0 7px;
+}
+
+.nutrition-generator-form > p {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 0 0 18px;
+}
+
+.nutrition-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.nutrition-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--soft);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.nutrition-form-grid input,
+.nutrition-form-grid select,
+.nutrition-form-grid textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 9px;
+  outline: none;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  transition: .2s;
+}
+
+.nutrition-form-grid input:focus,
+.nutrition-form-grid select:focus,
+.nutrition-form-grid textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(169, 134, 112, .15);
+}
+
+.nutrition-form-grid select {
+  cursor: pointer;
+}
+
+.nutrition-form-grid textarea {
+  min-height: 75px;
+  resize: vertical;
+}
+
+.nutrition-full-width {
+  grid-column: 1 / -1;
+}
+
+.nutrition-generator-form button[type="submit"] {
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(110deg, var(--accent), var(--accent-strong));
+  color: white;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.nutrition-generator-form button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px var(--shadow-strong);
+}
+
+.nutrition-generator-form button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 650px) {
+  .nutrition-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nutrition-full-width {
+    grid-column: auto;
+  }
+
+  .nutrition-ai-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nutrition-ai-header button {
+    width: 100%;
+  }
+}

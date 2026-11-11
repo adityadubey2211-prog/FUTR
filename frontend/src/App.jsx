@@ -706,21 +706,48 @@ function MindfulnessTimer({ onComplete }) {
             </div>
           </div>
         ) : (
+          
           <div className="mindfulness-start-area">
-
-            <p>
-              Give your mind a break. Even a few mindful
-              minutes can make a difference.
-            </p>
-
-            <button
-              className="mindfulness-start-btn"
-              onClick={() => setShowSetup(true)}
-            >
-              <span>▶</span> Start Session
-            </button>
-
+          
+            <div className="mindfulness-start-content">
+              <span className="mindfulness-kicker">
+                ✦ YOUR DAILY RESET
+              </span>
+          
+              <h3>Find your moment of calm.</h3>
+          
+              <p>
+                Slow down, clear your thoughts and give yourself
+                a peaceful break from the day.
+              </p>
+          
+              <div className="mindfulness-benefits">
+                <span>✧ Reduce stress</span>
+                <span>✧ Improve focus</span>
+                <span>✧ Feel refreshed</span>
+              </div>
+          
+              <button
+                className="mindfulness-start-btn"
+                onClick={() => setShowSetup(true)}
+              >
+                <span>▶</span> Start Session
+                <span className="mindfulness-btn-arrow">→</span>
+              </button>
+            </div>
+          
+            <div className="mindfulness-breathing-visual">
+              <div className="breathing-orbit orbit-one"></div>
+              <div className="breathing-orbit orbit-two"></div>
+              <div className="breathing-core">
+                <span>❋</span>
+                <small>BREATHE</small>
+              </div>
+              <p>INHALE · EXHALE</p>
+            </div>
+          
           </div>
+
         )}
 
       </section>
@@ -892,36 +919,63 @@ function Heatmap({ habits }) {
 
 
 
+
 function NutritionSection() {
   const [isExpanded, setIsExpanded] = useState(false);
+
   const weekDates = getCurrentWeekDates();
+
   const todayIndex = Math.max(
     0,
     weekDates.findIndex((item) => item.iso === TODAY)
   );
 
-  const [selectedDay, setSelectedDay] = useState(NUTRITION_DAYS[todayIndex]);
+  const [selectedDay, setSelectedDay] = useState(
+    NUTRITION_DAYS[todayIndex]
+  );
+
   const [plan, setPlan] = useState(null);
   const [planId, setPlanId] = useState(null);
+  const [planSource, setPlanSource] = useState("upload");
+
   const [checks, setChecks] = useState(() =>
     loadJSON(NUTRITION_CHECKS_KEY, {})
   );
+
   const [file, setFile] = useState(null);
+
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const [showGenerator, setShowGenerator] = useState(false);
+
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  const [preferences, setPreferences] = useState({
+    age: "",
+    goal: "muscle_gain",
+    diet_preference: "vegetarian",
+    activity_level: "moderate",
+    allergies: "",
+    budget_per_day: "",
+    cuisine_preference: "Indian",
+  });
 
   useEffect(() => {
     saveJSON(NUTRITION_CHECKS_KEY, checks);
   }, [checks]);
 
+  // LOAD SAVED PLAN
   useEffect(() => {
     let active = true;
 
     const loadSavedPlan = async () => {
       try {
-        const response = await fetch(`${API_BASE}/nutrition/plans/`);
+        const response = await fetch(
+          `${API_BASE}/nutrition/plans/`
+        );
 
         if (!response.ok) {
           throw new Error(
@@ -931,7 +985,13 @@ function NutritionSection() {
 
         const plans = await response.json();
 
-        if (!active || !Array.isArray(plans) || plans.length === 0) return;
+        if (
+          !active ||
+          !Array.isArray(plans) ||
+          plans.length === 0
+        ) {
+          return;
+        }
 
         const latest = plans[plans.length - 1];
 
@@ -942,6 +1002,7 @@ function NutritionSection() {
         });
 
         setPlanId(latest.id);
+        setPlanSource(latest.source || "upload");
       } catch (err) {
         console.error("Nutrition plan load failed:", err);
       }
@@ -961,7 +1022,8 @@ function NutritionSection() {
   const dayMeals =
     plan?.meals?.filter(
       (meal) =>
-        String(meal.day).toLowerCase() === selectedDay.toLowerCase()
+        String(meal.day).toLowerCase() ===
+        selectedDay.toLowerCase()
     ) || [];
 
   const completionKey = (meal, index) =>
@@ -971,6 +1033,7 @@ function NutritionSection() {
     Boolean(checks[completionKey(meal, index)])
   ).length;
 
+  // UPDATE MEAL
   const updateMeal = (index, field, value) => {
     setPlan((current) => ({
       ...current,
@@ -982,6 +1045,104 @@ function NutritionSection() {
     }));
   };
 
+  // UPDATE AI PREFERENCES
+  const updatePreference = (field, value) => {
+    setPreferences((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  // GENERATE AI DIET PLAN
+  const generateDietPlan = async (event) => {
+    event.preventDefault();
+
+    setError("");
+    setMessage("");
+
+    if (
+      !preferences.age ||
+      Number(preferences.age) < 18 ||
+      Number(preferences.age) > 100
+    ) {
+      setError("Please enter a valid age between 18 and 100.");
+      return;
+    }
+
+    setGenerating(true);
+
+    try {
+      const payload = {
+        ...preferences,
+        age: Number(preferences.age),
+        budget_per_day:
+          preferences.budget_per_day === ""
+            ? null
+            : Number(preferences.budget_per_day),
+      };
+
+      const response = await fetch(
+        `${API_BASE}/nutrition/generate/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.detail ||
+            result.message ||
+            "AI diet generation failed."
+        );
+      }
+
+      const generated = result.diet_plan;
+
+      if (
+        !generated ||
+        !Array.isArray(generated.meals) ||
+        generated.meals.length === 0
+      ) {
+        throw new Error(
+          "Gemini did not return a valid meal plan."
+        );
+      }
+
+      setPlan({
+        name:
+          generated.plan_name ||
+          "AI Generated Weekly Diet Plan",
+        description: generated.description || "",
+        meals: generated.meals.map((meal) => ({
+          ...meal,
+        })),
+      });
+
+      setPlanId(null);
+      setPlanSource("ai");
+
+      setShowGenerator(false);
+      setSelectedDay(NUTRITION_DAYS[todayIndex]);
+
+      setMessage(
+        `AI generated ${generated.meals.length} meals successfully. Review and save your plan.`
+      );
+    } catch (err) {
+      setError(
+        err.message || "Unable to generate diet plan."
+      );
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // PDF UPLOAD AND EXTRACTION
   const uploadAndExtract = async (event) => {
     event.preventDefault();
 
@@ -1010,13 +1171,18 @@ function NutritionSection() {
 
       if (!response.ok) {
         throw new Error(
-          result.detail || result.message || "Diet extraction failed."
+          result.detail ||
+            result.message ||
+            "Diet extraction failed."
         );
       }
 
       const extracted = result.diet_plan;
 
-      if (!extracted || !Array.isArray(extracted.meals)) {
+      if (
+        !extracted ||
+        !Array.isArray(extracted.meals)
+      ) {
         throw new Error(
           "Gemini response did not contain a valid meal list."
         );
@@ -1027,24 +1193,31 @@ function NutritionSection() {
           extracted.plan_name ||
           file.name.replace(/\.pdf$/i, ""),
         description: extracted.description || "",
-        meals: extracted.meals.map((meal) => ({ ...meal })),
+        meals: extracted.meals.map((meal) => ({
+          ...meal,
+        })),
       });
 
       setPlanId(null);
+      setPlanSource("upload");
+
+      setSelectedDay(NUTRITION_DAYS[todayIndex]);
 
       setMessage(
         `Extracted ${extracted.meals.length} meal entries. Review and edit them, then save your plan.`
       );
-
-      setSelectedDay(NUTRITION_DAYS[todayIndex]);
     } catch (err) {
-      setError(err.message || "Unable to extract this PDF.");
+      setError(
+        err.message || "Unable to extract this PDF."
+      );
+
       setMessage("");
     } finally {
       setLoading(false);
     }
   };
 
+  // SAVE OR UPDATE PLAN
   const savePlan = async () => {
     if (!plan || !plan.meals.length) return;
 
@@ -1054,9 +1227,14 @@ function NutritionSection() {
 
     try {
       const payload = {
-        name: plan.name?.trim() || "My Weekly Diet Plan",
-        source: "upload",
+        name:
+          plan.name?.trim() ||
+          "My Weekly Diet Plan",
+
+        source: planSource,
+
         description: plan.description || "",
+
         meals: plan.meals.map(
           ({ day, meal_type, meal_name, food_items }) => ({
             day,
@@ -1083,7 +1261,8 @@ function NutritionSection() {
 
       if (!response.ok) {
         throw new Error(
-          result.detail || "Could not save the diet plan."
+          result.detail ||
+            "Could not save the diet plan."
         );
       }
 
@@ -1094,14 +1273,21 @@ function NutritionSection() {
       });
 
       setPlanId(result.id);
-      setMessage("Your weekly diet plan has been saved.");
+      setPlanSource(result.source || planSource);
+
+      setMessage(
+        "Your weekly diet plan has been saved."
+      );
     } catch (err) {
-      setError(err.message || "Could not save the diet plan.");
+      setError(
+        err.message || "Could not save the diet plan."
+      );
     } finally {
       setSaving(false);
     }
   };
 
+  // MARK MEAL COMPLETE
   const toggleMeal = (meal, index, checked) => {
     const key = completionKey(meal, index);
 
@@ -1114,11 +1300,11 @@ function NutritionSection() {
   return (
     <section className="panel nutrition-panel reveal">
 
-      {/* NUTRITION HEADER */}
+      {/* HEADER */}
       <div className="nutrition-header">
         <div>
           <p className="eyebrow">FUEL YOUR DAY</p>
-          <h2>Weekly Nutrition</h2>
+          <h2>Weekly Nutrition  🥗</h2>
           <p className="nutrition-subtitle">
             Your diet, one meal at a time.
           </p>
@@ -1130,7 +1316,9 @@ function NutritionSection() {
           <button
             type="button"
             className="nutrition-toggle-btn"
-            onClick={() => setIsExpanded((prev) => !prev)}
+            onClick={() =>
+              setIsExpanded((prev) => !prev)
+            }
             aria-expanded={isExpanded}
           >
             {isExpanded ? "Collapse ▲" : "Expand ▼"}
@@ -1138,9 +1326,196 @@ function NutritionSection() {
         </div>
       </div>
 
-      {/* EXPANDABLE NUTRITION CONTENT */}
+      {/* EXPANDABLE CONTENT */}
       {isExpanded && (
         <div className="nutrition-content">
+
+          {/* AI GENERATOR BUTTON */}
+          <div className="nutrition-ai-header">
+            <div>
+              <h3>AI Diet Generator</h3>
+              <p>
+                Create a personalized 7-day meal plan with Gemini.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowGenerator((prev) => !prev);
+                setError("");
+                setMessage("");
+              }}
+              disabled={generating}
+            >
+              {showGenerator
+                ? "Close Generator"
+                : "✦ Generate with AI"}
+            </button>
+          </div>
+
+          {/* AI PREFERENCES FORM */}
+          {showGenerator && (
+            <form
+              className="nutrition-generator-form"
+              onSubmit={generateDietPlan}
+            >
+              <h3>Your Diet Preferences</h3>
+
+              <div className="nutrition-form-grid">
+
+                <label>
+                  Age
+                  <input
+                    type="number"
+                    min="18"
+                    max="100"
+                    required
+                    value={preferences.age}
+                    onChange={(event) =>
+                      updatePreference(
+                        "age",
+                        event.target.value
+                      )
+                    }
+                    placeholder="Enter your age"
+                  />
+                </label>
+
+                <label>
+                  Goal
+                  <select
+                    value={preferences.goal}
+                    onChange={(event) =>
+                      updatePreference(
+                        "goal",
+                        event.target.value
+                      )
+                    }
+                  >
+                    <option value="weight_loss">
+                      Weight Loss
+                    </option>
+                    <option value="muscle_gain">
+                      Muscle Gain
+                    </option>
+                    <option value="maintain_weight">
+                      Maintain Weight
+                    </option>
+                    <option value="balanced_diet">
+                      Balanced Diet
+                    </option>
+                  </select>
+                </label>
+
+                <label>
+                  Diet Preference
+                  <select
+                    value={preferences.diet_preference}
+                    onChange={(event) =>
+                      updatePreference(
+                        "diet_preference",
+                        event.target.value
+                      )
+                    }
+                  >
+                    <option value="vegetarian">
+                      Vegetarian
+                    </option>
+                    <option value="vegan">
+                      Vegan
+                    </option>
+                    <option value="eggetarian">
+                      Eggetarian
+                    </option>
+                    <option value="non_vegetarian">
+                      Non-Vegetarian
+                    </option>
+                  </select>
+                </label>
+
+                <label>
+                  Activity Level
+                  <select
+                    value={preferences.activity_level}
+                    onChange={(event) =>
+                      updatePreference(
+                        "activity_level",
+                        event.target.value
+                      )
+                    }
+                  >
+                    <option value="low">
+                      Low
+                    </option>
+                    <option value="moderate">
+                      Moderate
+                    </option>
+                    <option value="high">
+                      High
+                    </option>
+                  </select>
+                </label>
+
+                <label>
+                  Daily Budget (₹)
+                  <input
+                    type="number"
+                    min="0"
+                    max="10000"
+                    value={preferences.budget_per_day}
+                    onChange={(event) =>
+                      updatePreference(
+                        "budget_per_day",
+                        event.target.value
+                      )
+                    }
+                    placeholder="Optional"
+                  />
+                </label>
+
+                <label>
+                  Cuisine Preference
+                  <input
+                    type="text"
+                    value={preferences.cuisine_preference}
+                    onChange={(event) =>
+                      updatePreference(
+                        "cuisine_preference",
+                        event.target.value
+                      )
+                    }
+                    placeholder="e.g. Indian"
+                  />
+                </label>
+
+                <label className="nutrition-full-width">
+                  Allergies / Foods to Avoid
+                  <textarea
+                    rows={2}
+                    value={preferences.allergies}
+                    onChange={(event) =>
+                      updatePreference(
+                        "allergies",
+                        event.target.value
+                      )
+                    }
+                    placeholder="e.g. Peanuts, lactose..."
+                  />
+                </label>
+
+              </div>
+
+              <button
+                type="submit"
+                disabled={generating}
+              >
+                {generating
+                  ? "✦ Generating your diet..."
+                  : "Generate 7-Day Diet Plan"}
+              </button>
+            </form>
+          )}
 
           {/* PDF UPLOAD */}
           <form
@@ -1154,8 +1529,11 @@ function NutritionSection() {
                 type="file"
                 accept="application/pdf,.pdf"
                 onChange={(event) => {
-                  setFile(event.target.files?.[0] || null);
+                  setFile(
+                    event.target.files?.[0] || null
+                  );
                   setError("");
+                  setMessage("");
                 }}
               />
             </label>
@@ -1164,23 +1542,33 @@ function NutritionSection() {
               {file ? file.name : "PDF only"}
             </span>
 
-            <button type="submit" disabled={loading || !file}>
-              {loading ? "Extracting..." : "Extract with Gemini"}
+            <button
+              type="submit"
+              disabled={loading || !file}
+            >
+              {loading
+                ? "Extracting..."
+                : "Extract with Gemini"}
             </button>
           </form>
 
-          {/* STATUS MESSAGES */}
+          {/* STATUS */}
           {message && (
-            <p className="nutrition-message">{message}</p>
+            <p className="nutrition-message">
+              {message}
+            </p>
           )}
 
           {error && (
-            <p className="nutrition-error">{error}</p>
+            <p className="nutrition-error">
+              {error}
+            </p>
           )}
 
           {/* DIET PLAN */}
           {plan ? (
             <>
+
               <div className="nutrition-plan-heading">
                 <div>
                   <label htmlFor="nutrition-plan-name">
@@ -1197,6 +1585,13 @@ function NutritionSection() {
                       }))
                     }
                   />
+
+                  <small>
+                    Source:{" "}
+                    {planSource === "ai"
+                      ? "AI Generated"
+                      : "PDF Upload"}
+                  </small>
                 </div>
 
                 <button
@@ -1213,13 +1608,15 @@ function NutritionSection() {
                 </button>
               </div>
 
-              {/* WEEKLY DAY TABS */}
+              {/* DAY TABS */}
               <div className="nutrition-day-tabs">
                 {weekDates.map(({ day, shortDate }) => (
                   <button
                     type="button"
                     key={day}
-                    className={selectedDay === day ? "active" : ""}
+                    className={
+                      selectedDay === day ? "active" : ""
+                    }
                     onClick={() => setSelectedDay(day)}
                   >
                     <span>{day.slice(0, 3)}</span>
@@ -1254,8 +1651,13 @@ function NutritionSection() {
 
                     <tbody>
                       {dayMeals.map((meal, index) => {
-                        const originalIndex = plan.meals.indexOf(meal);
-                        const key = completionKey(meal, index);
+                        const originalIndex =
+                          plan.meals.indexOf(meal);
+
+                        const key = completionKey(
+                          meal,
+                          index
+                        );
 
                         return (
                           <tr
@@ -1264,7 +1666,9 @@ function NutritionSection() {
                               `${meal.day}-${meal.meal_type}-${index}`
                             }
                             className={
-                              checks[key] ? "meal-completed" : ""
+                              checks[key]
+                                ? "meal-completed"
+                                : ""
                             }
                           >
                             <td>
@@ -1334,26 +1738,31 @@ function NutritionSection() {
                 </div>
               ) : (
                 <div className="nutrition-empty-day">
-                  No meals found for {selectedDay}. You can add meals
-                  after extraction or check your uploaded plan.
+                  No meals found for {selectedDay}.
+                  You can add meals after extraction or
+                  check your uploaded plan.
                 </div>
               )}
+
             </>
           ) : (
             <div className="nutrition-empty">
               <span>🥗</span>
               <h3>Your weekly diet starts here</h3>
               <p>
-                Upload your diet PDF. Gemini will organise it from
-                Monday to Sunday, then you can review and save it.
+                Generate a personalized diet with AI or
+                upload your weekly diet PDF. Review,
+                edit and save your plan.
               </p>
             </div>
           )}
+
         </div>
       )}
     </section>
   );
 }
+
 
 
 /* ─────────────── MAIN APP ─────────────── */
@@ -1834,7 +2243,6 @@ export default function App() {
                   });
                 }}
               />
-              <Heatmap habits={habits} />
 
               {/* HABITS + FUTURE */}
 
@@ -2014,6 +2422,8 @@ export default function App() {
                   </p>
                 </div>
               </section>
+              {/* CONSISTENCY MAP — BOTTOM OF TODAY */}
+              <Heatmap habits={habits} />
             </>
           )}
 
