@@ -83,6 +83,24 @@ function saveJSON(key, value) {
   } catch {}
 }
 
+async function apiRequest(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...options.headers,
+    },
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.detail || `API Error: ${response.status}`);
+  }
+
+  return data;
+}
+
 function getGreeting(h) {
   if (h < 5) return "Still up";
   if (h < 12) return "Good morning";
@@ -1771,9 +1789,9 @@ export default function App() {
   const now = new Date();
   const hour = now.getHours();
 
-  const [habits, setHabits] = useState(() =>
-    loadJSON(HABITS_KEY, DEFAULT_HABITS)
-  );
+  const [habits, setHabits] = useState([]);
+  const [habitsLoading, setHabitsLoading] = useState(true);
+  const [habitsError, setHabitsError] = useState("");
 
   const [metrics, setMetrics] = useState(() => {
     const saved = loadJSON(METRICS_KEY, null);
@@ -1829,6 +1847,55 @@ export default function App() {
     };
   }, []);
 
+  // Load habits and today's completion status from backend
+  useEffect(() => {
+    let active = true;
+  
+    async function loadHabits() {
+      try {
+        setHabitsLoading(true);
+        setHabitsError("");
+  
+        const [habitList, logs] = await Promise.all([
+          apiRequest("/habits/"),
+          apiRequest("/habit-logs/"),
+        ]);
+  
+        if (!active) return;
+  
+        const todayLogs = {};
+  
+        logs.forEach((log) => {
+          if (log.log_date === TODAY) {
+            todayLogs[log.habit_id] = log.completed;
+          }
+        });
+  
+        setHabits(
+          habitList.map((habit) => ({
+            ...habit,
+            completed: Boolean(todayLogs[habit.id]),
+          }))
+        );
+      } catch (error) {
+        if (active) {
+          setHabitsError(error.message);
+          console.error("Habit loading failed:", error);
+        }
+      } finally {
+        if (active) {
+          setHabitsLoading(false);
+        }
+      }
+    }
+  
+    loadHabits();
+  
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // Native phone step count
   const [nativeSteps, setNativeSteps] = useState(null);
 
@@ -1837,9 +1904,9 @@ export default function App() {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  useEffect(() => {
-    saveJSON(HABITS_KEY, habits);
-  }, [habits]);
+  // useEffect(() => {
+  //   saveJSON(HABITS_KEY, habits);
+  // }, [habits]);
 
   useEffect(() => {
     saveJSON(METRICS_KEY, metrics);
@@ -1902,34 +1969,87 @@ export default function App() {
   const score = total === 0 ? 0 : Math.round((completed / total) * 100);
   const scoreAnim = useCountUp(score);
 
-  const toggleHabit = (id) =>
-    setHabits((cur) =>
-      cur.map((h) =>
-        h.id === id ? { ...h, completed: !h.completed } : h
-      )
-    );
-
-  const deleteHabit = (id) =>
-    setHabits((cur) => cur.filter((h) => h.id !== id));
-
-  const addHabit = (e) => {
-    e.preventDefault();
-
-    if (!newHabit.trim()) return;
-
-    setHabits((cur) => [
-      ...cur,
-      {
-        id: Date.now(),
-        name: newHabit.trim(),
-        category: newCat,
-        completed: false,
-      },
-    ]);
-
-    setNewHabit("");
-    setShowInput(false);
+  
+  const toggleHabit = async (id) => {
+    const habit = habits.find((h) => h.id === id);
+  
+    if (!habit) return;
+  
+    const nextCompleted = !habit.completed;
+  
+    try {
+      await apiRequest("/habit-logs/daily", {
+        method: "PUT",
+        body: JSON.stringify({
+          habit_id: id,
+          log_date: TODAY,
+          completed: nextCompleted,
+        }),
+      });
+  
+      setHabits((cur) =>
+        cur.map((h) =>
+          h.id === id
+            ? { ...h, completed: nextCompleted }
+            : h
+        )
+      );
+    } catch (error) {
+      console.error("Habit update failed:", error);
+      setHabitsError(error.message);
+    }
   };
+
+
+
+  const deleteHabit = async (id) => {
+    try {
+      await apiRequest(`/habits/${id}`, {
+        method: "DELETE",
+      });
+  
+      setHabits((cur) => cur.filter((h) => h.id !== id));
+      setHabitsError("");
+    } catch (error) {
+      console.error("Habit deletion failed:", error);
+      setHabitsError(error.message);
+    }
+  };
+
+
+  
+  const addHabit = async (e) => {
+    e.preventDefault();
+  
+    if (!newHabit.trim()) return;
+  
+    try {
+      const createdHabit = await apiRequest("/habits/", {
+        method: "POST",
+        body: JSON.stringify({
+          name: newHabit.trim(),
+          category: newCat,
+          description: "",
+        }),
+      });
+  
+      setHabits((cur) => [
+        ...cur,
+        {
+          ...createdHabit,
+          completed: false,
+        },
+      ]);
+  
+      setNewHabit("");
+      setShowInput(false);
+      setHabitsError("");
+    } catch (error) {
+      console.error("Habit creation failed:", error);
+      setHabitsError(error.message);
+    }
+  };
+
 
   /* ─────────────── METRIC HELPERS ─────────────── */
 
