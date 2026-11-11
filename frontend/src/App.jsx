@@ -24,7 +24,12 @@ function toLocalISODate(date) {
 const TODAY = toLocalISODate(new Date());
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 const NUTRITION_CHECKS_KEY = "futr.nutrition.checks.v1";
-
+{/* <button
+  className="nutrition-toggle-btn"
+  onClick={() => setIsExpanded(!isExpanded)}
+>
+  {isExpanded ? "Collapse ▲" : "Expand ▼"}
+</button> */}
 const METRIC_DEFS = [
   { id: "sleep", icon: "☾", name: "Sleep", unit: "hours", step: 0.5, max: 24, placeholder: "7.5" },
   { id: "steps", icon: "👟", name: "Steps", unit: "steps", step: 100, max: 50000, placeholder: "6000" },
@@ -819,13 +824,88 @@ function getCurrentWeekDates() {
   });
 }
 
+
+function Heatmap({ habits }) {
+  const today = new Date();
+
+  const days = Array.from({ length: 365 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (364 - index));
+
+    const dateKey = toLocalISODate(date);
+
+    // Today's completion count comes from current habits.
+    const count =
+      dateKey === TODAY
+        ? habits.filter((habit) => habit.completed).length
+        : 0;
+
+    return {
+      date: dateKey,
+      count,
+    };
+  });
+
+  const getLevel = (count) => {
+    if (count === 0) return 0;
+    if (count === 1) return 1;
+    if (count === 2) return 2;
+    if (count <= 4) return 3;
+    return 4;
+  };
+
+  const activeDays = days.filter((day) => day.count > 0).length;
+
+  return (
+    <section className="heatmap-section">
+      <div className="heatmap-header">
+        <div>
+          <h3>Consistency Map</h3>
+          <p>Your daily habit activity over the last year</p>
+        </div>
+        <span>{activeDays} active days</span>
+      </div>
+
+      <div className="heatmap-grid">
+        {days.map((day) => (
+          <div
+            key={day.date}
+            className={`heatmap-cell level-${getLevel(day.count)}`}
+            title={`${day.date}: ${day.count} habits completed`}
+          />
+        ))}
+      </div>
+
+      <div className="heatmap-legend">
+        <span>Less</span>
+        {[0, 1, 2, 3, 4].map((level) => (
+          <div
+            key={level}
+            className={`heatmap-cell level-${level}`}
+          />
+        ))}
+        <span>More</span>
+      </div>
+    </section>
+  );
+}
+
+
+
 function NutritionSection() {
+  const [isExpanded, setIsExpanded] = useState(false);
   const weekDates = getCurrentWeekDates();
-  const todayIndex = Math.max(0, weekDates.findIndex((item) => item.iso === TODAY));
+  const todayIndex = Math.max(
+    0,
+    weekDates.findIndex((item) => item.iso === TODAY)
+  );
+
   const [selectedDay, setSelectedDay] = useState(NUTRITION_DAYS[todayIndex]);
   const [plan, setPlan] = useState(null);
   const [planId, setPlanId] = useState(null);
-  const [checks, setChecks] = useState(() => loadJSON(NUTRITION_CHECKS_KEY, {}));
+  const [checks, setChecks] = useState(() =>
+    loadJSON(NUTRITION_CHECKS_KEY, {})
+  );
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -838,38 +918,73 @@ function NutritionSection() {
 
   useEffect(() => {
     let active = true;
+
     const loadSavedPlan = async () => {
       try {
         const response = await fetch(`${API_BASE}/nutrition/plans/`);
-        if (!response.ok) throw new Error(`Could not load saved diet plans (${response.status})`);
+
+        if (!response.ok) {
+          throw new Error(
+            `Could not load saved diet plans (${response.status})`
+          );
+        }
+
         const plans = await response.json();
+
         if (!active || !Array.isArray(plans) || plans.length === 0) return;
+
         const latest = plans[plans.length - 1];
-        setPlan({ name: latest.name, description: latest.description || "", meals: latest.meals || [] });
+
+        setPlan({
+          name: latest.name,
+          description: latest.description || "",
+          meals: latest.meals || [],
+        });
+
         setPlanId(latest.id);
       } catch (err) {
         console.error("Nutrition plan load failed:", err);
-        // Keep the rest of the dashboard usable when the backend is offline.
       }
     };
+
     loadSavedPlan();
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const selectedDate = weekDates.find((item) => item.day === selectedDay) || weekDates[todayIndex];
-  const dayMeals = plan?.meals?.filter((meal) => String(meal.day).toLowerCase() === selectedDay.toLowerCase()) || [];
-  const completionKey = (meal, index) => `${selectedDate.iso}:${meal.id ?? `${meal.meal_type}-${index}`}`;
-  const completedCount = dayMeals.filter((meal, index) => Boolean(checks[completionKey(meal, index)])).length;
+  const selectedDate =
+    weekDates.find((item) => item.day === selectedDay) ||
+    weekDates[todayIndex];
+
+  const dayMeals =
+    plan?.meals?.filter(
+      (meal) =>
+        String(meal.day).toLowerCase() === selectedDay.toLowerCase()
+    ) || [];
+
+  const completionKey = (meal, index) =>
+    `${selectedDate.iso}:${meal.id ?? `${meal.meal_type}-${index}`}`;
+
+  const completedCount = dayMeals.filter((meal, index) =>
+    Boolean(checks[completionKey(meal, index)])
+  ).length;
 
   const updateMeal = (index, field, value) => {
     setPlan((current) => ({
       ...current,
-      meals: current.meals.map((meal, mealIndex) => mealIndex === index ? { ...meal, [field]: value } : meal),
+      meals: current.meals.map((meal, mealIndex) =>
+        mealIndex === index
+          ? { ...meal, [field]: value }
+          : meal
+      ),
     }));
   };
 
   const uploadAndExtract = async (event) => {
     event.preventDefault();
+
     if (!file) {
       setError("Choose your weekly diet PDF first.");
       return;
@@ -878,21 +993,49 @@ function NutritionSection() {
     setLoading(true);
     setError("");
     setMessage("Sending PDF to Gemini for diet extraction...");
+
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const response = await fetch(`${API_BASE}/nutrition/extract-pdf/`, { method: "POST", body: formData });
+
+      const response = await fetch(
+        `${API_BASE}/nutrition/extract-pdf/`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
       const result = await response.json();
-      if (!response.ok) throw new Error(result.detail || result.message || "Diet extraction failed.");
+
+      if (!response.ok) {
+        throw new Error(
+          result.detail || result.message || "Diet extraction failed."
+        );
+      }
+
       const extracted = result.diet_plan;
-      if (!extracted || !Array.isArray(extracted.meals)) throw new Error("Gemini response did not contain a valid meal list.");
+
+      if (!extracted || !Array.isArray(extracted.meals)) {
+        throw new Error(
+          "Gemini response did not contain a valid meal list."
+        );
+      }
+
       setPlan({
-        name: extracted.plan_name || file.name.replace(/\.pdf$/i, ""),
+        name:
+          extracted.plan_name ||
+          file.name.replace(/\.pdf$/i, ""),
         description: extracted.description || "",
         meals: extracted.meals.map((meal) => ({ ...meal })),
       });
+
       setPlanId(null);
-      setMessage(`Extracted ${extracted.meals.length} meal entries. Review and edit them, then save your plan.`);
+
+      setMessage(
+        `Extracted ${extracted.meals.length} meal entries. Review and edit them, then save your plan.`
+      );
+
       setSelectedDay(NUTRITION_DAYS[todayIndex]);
     } catch (err) {
       setError(err.message || "Unable to extract this PDF.");
@@ -904,25 +1047,52 @@ function NutritionSection() {
 
   const savePlan = async () => {
     if (!plan || !plan.meals.length) return;
+
     setSaving(true);
     setError("");
     setMessage("");
+
     try {
       const payload = {
         name: plan.name?.trim() || "My Weekly Diet Plan",
         source: "upload",
         description: plan.description || "",
-        meals: plan.meals.map(({ day, meal_type, meal_name, food_items }) => ({ day, meal_type, meal_name, food_items: food_items || "" })),
+        meals: plan.meals.map(
+          ({ day, meal_type, meal_name, food_items }) => ({
+            day,
+            meal_type,
+            meal_name,
+            food_items: food_items || "",
+          })
+        ),
       };
-      const url = planId ? `${API_BASE}/nutrition/plans/${planId}` : `${API_BASE}/nutrition/plans/`;
+
+      const url = planId
+        ? `${API_BASE}/nutrition/plans/${planId}`
+        : `${API_BASE}/nutrition/plans/`;
+
       const response = await fetch(url, {
         method: planId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
+
       const result = await response.json();
-      if (!response.ok) throw new Error(result.detail || "Could not save the diet plan.");
-      setPlan({ name: result.name, description: result.description || "", meals: result.meals || plan.meals });
+
+      if (!response.ok) {
+        throw new Error(
+          result.detail || "Could not save the diet plan."
+        );
+      }
+
+      setPlan({
+        name: result.name,
+        description: result.description || "",
+        meals: result.meals || plan.meals,
+      });
+
       setPlanId(result.id);
       setMessage("Your weekly diet plan has been saved.");
     } catch (err) {
@@ -934,93 +1104,257 @@ function NutritionSection() {
 
   const toggleMeal = (meal, index, checked) => {
     const key = completionKey(meal, index);
-    setChecks((current) => ({ ...current, [key]: checked }));
+
+    setChecks((current) => ({
+      ...current,
+      [key]: checked,
+    }));
   };
 
   return (
     <section className="panel nutrition-panel reveal">
+
+      {/* NUTRITION HEADER */}
       <div className="nutrition-header">
         <div>
           <p className="eyebrow">FUEL YOUR DAY</p>
           <h2>Weekly Nutrition</h2>
-          <p className="nutrition-subtitle">Your diet, one meal at a time.</p>
+          <p className="nutrition-subtitle">
+            Your diet, one meal at a time.
+          </p>
         </div>
-        <span className="nutrition-icon">✳</span>
+
+        <div className="nutrition-header-actions">
+          <span className="nutrition-icon">✳</span>
+
+          <button
+            type="button"
+            className="nutrition-toggle-btn"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            aria-expanded={isExpanded}
+          >
+            {isExpanded ? "Collapse ▲" : "Expand ▼"}
+          </button>
+        </div>
       </div>
 
-      <form className="nutrition-upload" onSubmit={uploadAndExtract}>
-        <label className="nutrition-file-label">
-          <span>＋ Upload weekly diet PDF</span>
-          <input type="file" accept="application/pdf,.pdf" onChange={(event) => { setFile(event.target.files?.[0] || null); setError(""); }} />
-        </label>
-        <span className="nutrition-file-name">{file ? file.name : "PDF only"}</span>
-        <button type="submit" disabled={loading || !file}>{loading ? "Extracting..." : "Extract with Gemini"}</button>
-      </form>
+      {/* EXPANDABLE NUTRITION CONTENT */}
+      {isExpanded && (
+        <div className="nutrition-content">
 
-      {message && <p className="nutrition-message">{message}</p>}
-      {error && <p className="nutrition-error">{error}</p>}
+          {/* PDF UPLOAD */}
+          <form
+            className="nutrition-upload"
+            onSubmit={uploadAndExtract}
+          >
+            <label className="nutrition-file-label">
+              <span>＋ Upload weekly diet PDF</span>
 
-      {plan ? (
-        <>
-          <div className="nutrition-plan-heading">
-            <div>
-              <label htmlFor="nutrition-plan-name">DIET PLAN NAME</label>
-              <input id="nutrition-plan-name" value={plan.name || ""} onChange={(event) => setPlan((current) => ({ ...current, name: event.target.value }))} />
-            </div>
-            <button type="button" className="nutrition-save-btn" onClick={savePlan} disabled={saving}>{saving ? "Saving..." : planId ? "Update plan" : "Save diet plan"}</button>
-          </div>
+              <input
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={(event) => {
+                  setFile(event.target.files?.[0] || null);
+                  setError("");
+                }}
+              />
+            </label>
 
-          <div className="nutrition-day-tabs">
-            {weekDates.map(({ day, shortDate }) => (
-              <button type="button" key={day} className={selectedDay === day ? "active" : ""} onClick={() => setSelectedDay(day)}>
-                <span>{day.slice(0, 3)}</span><small>{shortDate}</small>
-              </button>
-            ))}
-          </div>
+            <span className="nutrition-file-name">
+              {file ? file.name : "PDF only"}
+            </span>
 
-          <div className="nutrition-day-heading">
-            <div><h3>{selectedDay}</h3><span>{selectedDate.shortDate}</span></div>
-            <span className="nutrition-progress">{completedCount}/{dayMeals.length} meals done</span>
-          </div>
+            <button type="submit" disabled={loading || !file}>
+              {loading ? "Extracting..." : "Extract with Gemini"}
+            </button>
+          </form>
 
-          {dayMeals.length > 0 ? (
-            <div className="nutrition-table-wrap">
-              <table className="nutrition-table">
-                <thead><tr><th>Meal</th><th>Food / Diet</th><th>Done</th></tr></thead>
-                <tbody>
-                  {dayMeals.map((meal, index) => {
-                    const originalIndex = plan.meals.indexOf(meal);
-                    const key = completionKey(meal, index);
-                    return (
-                      <tr key={meal.id ?? `${meal.day}-${meal.meal_type}-${index}`} className={checks[key] ? "meal-completed" : ""}>
-                        <td>
-                          <input aria-label={`${meal.meal_type} meal type`} className="nutrition-meal-type" value={meal.meal_type || ""} onChange={(event) => updateMeal(originalIndex, "meal_type", event.target.value)} />
-                        </td>
-                        <td>
-                          <input aria-label={`${meal.meal_type} meal name`} className="nutrition-meal-name" value={meal.meal_name || ""} onChange={(event) => updateMeal(originalIndex, "meal_name", event.target.value)} placeholder="Meal name" />
-                          <textarea aria-label="Food items" value={meal.food_items || ""} onChange={(event) => updateMeal(originalIndex, "food_items", event.target.value)} placeholder="Food items" rows={2} />
-                        </td>
-                        <td className="nutrition-check-cell"><input type="checkbox" checked={Boolean(checks[key])} onChange={(event) => toggleMeal(meal, index, event.target.checked)} aria-label={`Mark ${meal.meal_type} complete`} /></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="nutrition-empty-day">No meals found for {selectedDay}. You can add meals after extraction or check your uploaded plan.</div>
+          {/* STATUS MESSAGES */}
+          {message && (
+            <p className="nutrition-message">{message}</p>
           )}
-        </>
-      ) : (
-        <div className="nutrition-empty">
-          <span>🥗</span>
-          <h3>Your weekly diet starts here</h3>
-          <p>Upload your diet PDF. Gemini will organise it from Monday to Sunday, then you can review and save it.</p>
+
+          {error && (
+            <p className="nutrition-error">{error}</p>
+          )}
+
+          {/* DIET PLAN */}
+          {plan ? (
+            <>
+              <div className="nutrition-plan-heading">
+                <div>
+                  <label htmlFor="nutrition-plan-name">
+                    DIET PLAN NAME
+                  </label>
+
+                  <input
+                    id="nutrition-plan-name"
+                    value={plan.name || ""}
+                    onChange={(event) =>
+                      setPlan((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  className="nutrition-save-btn"
+                  onClick={savePlan}
+                  disabled={saving}
+                >
+                  {saving
+                    ? "Saving..."
+                    : planId
+                    ? "Update plan"
+                    : "Save diet plan"}
+                </button>
+              </div>
+
+              {/* WEEKLY DAY TABS */}
+              <div className="nutrition-day-tabs">
+                {weekDates.map(({ day, shortDate }) => (
+                  <button
+                    type="button"
+                    key={day}
+                    className={selectedDay === day ? "active" : ""}
+                    onClick={() => setSelectedDay(day)}
+                  >
+                    <span>{day.slice(0, 3)}</span>
+                    <small>{shortDate}</small>
+                  </button>
+                ))}
+              </div>
+
+              {/* SELECTED DAY */}
+              <div className="nutrition-day-heading">
+                <div>
+                  <h3>{selectedDay}</h3>
+                  <span>{selectedDate.shortDate}</span>
+                </div>
+
+                <span className="nutrition-progress">
+                  {completedCount}/{dayMeals.length} meals done
+                </span>
+              </div>
+
+              {/* MEALS TABLE */}
+              {dayMeals.length > 0 ? (
+                <div className="nutrition-table-wrap">
+                  <table className="nutrition-table">
+                    <thead>
+                      <tr>
+                        <th>Meal</th>
+                        <th>Food / Diet</th>
+                        <th>Done</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {dayMeals.map((meal, index) => {
+                        const originalIndex = plan.meals.indexOf(meal);
+                        const key = completionKey(meal, index);
+
+                        return (
+                          <tr
+                            key={
+                              meal.id ??
+                              `${meal.day}-${meal.meal_type}-${index}`
+                            }
+                            className={
+                              checks[key] ? "meal-completed" : ""
+                            }
+                          >
+                            <td>
+                              <input
+                                aria-label={`${meal.meal_type} meal type`}
+                                className="nutrition-meal-type"
+                                value={meal.meal_type || ""}
+                                onChange={(event) =>
+                                  updateMeal(
+                                    originalIndex,
+                                    "meal_type",
+                                    event.target.value
+                                  )
+                                }
+                              />
+                            </td>
+
+                            <td>
+                              <input
+                                aria-label={`${meal.meal_type} meal name`}
+                                className="nutrition-meal-name"
+                                value={meal.meal_name || ""}
+                                onChange={(event) =>
+                                  updateMeal(
+                                    originalIndex,
+                                    "meal_name",
+                                    event.target.value
+                                  )
+                                }
+                                placeholder="Meal name"
+                              />
+
+                              <textarea
+                                aria-label="Food items"
+                                value={meal.food_items || ""}
+                                onChange={(event) =>
+                                  updateMeal(
+                                    originalIndex,
+                                    "food_items",
+                                    event.target.value
+                                  )
+                                }
+                                placeholder="Food items"
+                                rows={2}
+                              />
+                            </td>
+
+                            <td className="nutrition-check-cell">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(checks[key])}
+                                onChange={(event) =>
+                                  toggleMeal(
+                                    meal,
+                                    index,
+                                    event.target.checked
+                                  )
+                                }
+                                aria-label={`Mark ${meal.meal_type} complete`}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="nutrition-empty-day">
+                  No meals found for {selectedDay}. You can add meals
+                  after extraction or check your uploaded plan.
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="nutrition-empty">
+              <span>🥗</span>
+              <h3>Your weekly diet starts here</h3>
+              <p>
+                Upload your diet PDF. Gemini will organise it from
+                Monday to Sunday, then you can review and save it.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </section>
   );
 }
+
 
 /* ─────────────── MAIN APP ─────────────── */
 
@@ -1500,7 +1834,7 @@ export default function App() {
                   });
                 }}
               />
-
+              <Heatmap habits={habits} />
 
               {/* HABITS + FUTURE */}
 
