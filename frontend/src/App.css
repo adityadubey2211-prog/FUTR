@@ -2337,3 +2337,142 @@ html.cursor-active .cursor-glow {
 .mindfulness-breathing-visual > p {
   color: #cba47e;
 }
+
+
+
+/* FUTR Logo Animation */
+
+.brand-icon {
+  animation: futrLogoIntro 0.8s ease-out both,
+             futrLogoGlow 3s ease-in-out 0.8s infinite;
+  transform-origin: center;
+}
+
+@keyframes futrLogoIntro {
+  0% {
+    opacity: 0;
+    transform: scale(0.65) rotate(-15deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.12) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes futrLogoGlow {
+  0%, 100% {
+    box-shadow: 0 6px 14px var(--shadow-strong);
+  }
+  50% {
+    box-shadow: 0 0 22px var(--accent),
+                0 0 35px var(--shadow-strong);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-icon {
+    animation: none;
+  }
+}
+
+/* FUTR — Top Right Concentric Hover Rings */
+
+.dashboard-card,
+.lifestyle-card,
+.metric-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Concentric circles from top-right */
+.dashboard-card::after,
+.lifestyle-card::after,
+.metric-card::after {
+  content: "";
+  position: absolute;
+  width: 320px;
+  height: 320px;
+
+  top: 0;
+  right: 0;
+
+  transform: translate(45%, -45%) scale(0.35);
+  transform-origin: top right;
+
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+
+  background: repeating-radial-gradient(
+    circle at center,
+    transparent 0px,
+    transparent 19px,
+    rgba(203, 164, 126, 0.20) 20px,
+    transparent 22px
+  );
+
+  transition:
+    opacity 0.4s ease,
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dashboard-card:hover::after,
+.lifestyle-card:hover::after,
+.metric-card:hover::after {
+  opacity: 1;
+  transform: translate(45%, -45%) scale(1);
+}
+
+/* Keep content above circles */
+.dashboard-card > *,
+.lifestyle-card > *,
+.metric-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Mobile */
+@media (hover: none) {
+  .dashboard-card::after,
+  .lifestyle-card::after,
+  .metric-card::after {
+    display: none;
+  }
+}
+/* Restore diagonal hover shine */
+
+.dashboard-card::before,
+.lifestyle-card::before,
+.metric-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -75%;
+  width: 45%;
+  height: 200%;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(203, 164, 126, 0.16),
+    transparent
+  );
+
+  transform: rotate(35deg);
+  pointer-events: none;
+  z-index: 2;
+
+  transition: left 0.8s ease;
+}
+
+.dashboard-card:hover::before,
+.lifestyle-card:hover::before,
+.metric-card:hover::before {
+  left: 130%;
+}

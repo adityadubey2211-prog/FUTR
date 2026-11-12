@@ -225,3 +225,213 @@
     width: 100%;
   }
 }
+
+/* ═══════════════════════════════════════
+   FUTR — PREMIUM NUTRITION HOVER SYSTEM
+═══════════════════════════════════════ */
+
+/* Individual interactive slots */
+.nutrition-upload,
+.nutrition-ai-header,
+.nutrition-generator-form,
+.nutrition-empty,
+.nutrition-day-tabs button,
+.nutrition-progress,
+.nutrition-empty-day,
+.nutrition-table-wrap,
+.nutrition-plan-heading {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Diagonal moving shine */
+.nutrition-upload::before,
+.nutrition-ai-header::before,
+.nutrition-generator-form::before,
+.nutrition-empty::before,
+.nutrition-day-tabs button::before,
+.nutrition-progress::before,
+.nutrition-empty-day::before,
+.nutrition-table-wrap::before,
+.nutrition-plan-heading::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -80%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(203, 164, 126, 0.16),
+    transparent
+  );
+  transform: rotate(35deg);
+  pointer-events: none;
+  z-index: 2;
+  transition: left 0.8s ease;
+}
+
+.nutrition-upload:hover::before,
+.nutrition-ai-header:hover::before,
+.nutrition-generator-form:hover::before,
+.nutrition-empty:hover::before,
+.nutrition-day-tabs button:hover::before,
+.nutrition-progress:hover::before,
+.nutrition-empty-day:hover::before,
+.nutrition-table-wrap:hover::before,
+.nutrition-plan-heading:hover::before {
+  left: 140%;
+}
+
+/* Top-right concentric circles */
+.nutrition-upload::after,
+.nutrition-ai-header::after,
+.nutrition-generator-form::after,
+.nutrition-empty::after,
+.nutrition-day-tabs button::after,
+.nutrition-progress::after,
+.nutrition-empty-day::after,
+.nutrition-table-wrap::after,
+.nutrition-plan-heading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transform: translate(45%, -45%) scale(.35);
+  background: repeating-radial-gradient(
+    circle,
+    transparent 0,
+    transparent 18px,
+    rgba(203, 164, 126, .17) 19px,
+    transparent 21px
+  );
+  transition:
+    opacity .4s ease,
+    transform .8s cubic-bezier(.16, 1, .3, 1);
+}
+
+.nutrition-upload:hover::after,
+.nutrition-ai-header:hover::after,
+.nutrition-generator-form:hover::after,
+.nutrition-empty:hover::after,
+.nutrition-day-tabs button:hover::after,
+.nutrition-progress:hover::after,
+.nutrition-empty-day:hover::after,
+.nutrition-table-wrap:hover::after,
+.nutrition-plan-heading:hover::after {
+  opacity: 1;
+  transform: translate(45%, -45%) scale(1);
+}
+
+/* Premium card interaction */
+.nutrition-upload,
+.nutrition-ai-header,
+.nutrition-generator-form,
+.nutrition-empty,
+.nutrition-empty-day,
+.nutrition-table-wrap {
+  transition:
+    border-color .3s ease,
+    box-shadow .3s ease,
+    transform .3s ease;
+}
+
+.nutrition-upload:hover,
+.nutrition-ai-header:hover,
+.nutrition-generator-form:hover,
+.nutrition-empty:hover,
+.nutrition-empty-day:hover,
+.nutrition-table-wrap:hover {
+  border-color: rgba(203, 164, 126, .38);
+  box-shadow: 0 8px 28px rgba(120, 85, 55, .10);
+  transform: translateY(-2px);
+}
+
+/* Day tabs */
+.nutrition-day-tabs button {
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease,
+    background .25s ease;
+}
+
+.nutrition-day-tabs button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(169, 134, 112, .13);
+}
+
+.nutrition-day-tabs button.active {
+  box-shadow: 0 4px 16px rgba(169, 134, 112, .16);
+}
+
+/* Buttons */
+.nutrition-upload > button,
+.nutrition-save-btn,
+.nutrition-ai-header button,
+.nutrition-generator-form button[type="submit"],
+.nutrition-file-label {
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    background .25s ease;
+}
+
+.nutrition-upload > button:hover,
+.nutrition-save-btn:hover,
+.nutrition-ai-header button:hover,
+.nutrition-generator-form button[type="submit"]:hover,
+.nutrition-file-label:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(169, 134, 112, .2);
+}
+
+/* Nutrition table rows */
+.nutrition-table tbody tr {
+  transition: background .25s ease;
+}
+
+.nutrition-table tbody tr:hover {
+  background: rgba(203, 164, 126, .07);
+}
+
+/* Reduced motion / touch devices */
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .nutrition-upload,
+  .nutrition-ai-header,
+  .nutrition-generator-form,
+  .nutrition-empty,
+  .nutrition-empty-day,
+  .nutrition-table-wrap {
+    transform: none;
+  }
+
+  .nutrition-upload::before,
+  .nutrition-ai-header::before,
+  .nutrition-generator-form::before,
+  .nutrition-empty::before,
+  .nutrition-day-tabs button::before,
+  .nutrition-progress::before,
+  .nutrition-empty-day::before,
+  .nutrition-table-wrap::before,
+  .nutrition-plan-heading::before,
+  .nutrition-upload::after,
+  .nutrition-ai-header::after,
+  .nutrition-generator-form::after,
+  .nutrition-empty::after,
+  .nutrition-day-tabs button::after,
+  .nutrition-progress::after,
+  .nutrition-empty-day::after,
+  .nutrition-table-wrap::after,
+  .nutrition-plan-heading::after {
+    display: none;
+  }
+}

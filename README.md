@@ -1,63 +1,156 @@
-# FUTR 🚀
+# 🚀 FUTR
 ### Understand Your Habits. Explore Your Future.
 
-**FUTR** is a personal habit and lifestyle tracking application designed to help people build consistency, understand their daily behavior, and visualize how small actions can shape their future.
+<p align="center">
+  <strong>Small actions today. A better future tomorrow.</strong>
+  <br />
+  A smarter way to track habits, understand your lifestyle, and visualize your future.
+</p>
 
-Instead of simply tracking what you do today, FUTR helps you explore what your current habits could mean for tomorrow.
+<p align="center">
+  <img src="https://img.shields.io/badge/React-Frontend-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/Python-Powered-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/Capacitor-Android-119EFF?style=for-the-badge&logo=capacitor&logoColor=white" />
+</p>
 
-Built with **React, FastAPI, and Android integration**, FUTR brings habit management, lifestyle tracking, productivity analytics, nutrition planning, mindfulness, and future simulations together in one platform.
+<p align="center">
+  <a href="https://github.com/adityadubey2211-prog/FUTR">Repository</a> •
+  <a href="#-features">Features</a> •
+  <a href="#-getting-started">Installation</a> •
+  <a href="#-roadmap">Roadmap</a>
+</p>
+
+---
+
+## 🌌 About FUTR
+
+**FUTR** is a personal habit and lifestyle tracking platform built around one simple idea:
+
+*Your future is shaped by what you repeatedly do today.*
+
+Traditional habit trackers tell you whether you completed a task. FUTR goes a step further — it helps you understand your daily behaviour, measure consistency, and explore how small improvements can influence your long-term future.
+
+With productivity analytics, AI-powered nutrition planning, mindfulness sessions, activity tracking, and future simulations, FUTR brings multiple aspects of personal growth into one platform.
 
 ---
 
 ## ✨ Features
 
+<table>
+<tr>
+<td width="50%">
+
 ### 🎯 Habit Management
-- Create and manage personalized daily habits.
-- Mark habits as completed or pending.
-- Track daily habit performance.
-- Monitor consistency over time.
+- Create and manage daily habits.
+- Mark tasks as completed or pending.
+- Track daily performance.
+- Build long-term consistency.
+
+</td>
+<td width="50%">
 
 ### 📊 Productivity Dashboard
 - Daily productivity score.
 - Habit completion statistics.
 - Weekly performance analytics.
-- Activity heatmap to visualize consistency.
+- Activity heatmap.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
 
 ### 🔮 Future Simulation
-- Explore potential long-term outcomes based on current habits.
+- Explore long-term outcomes.
 - Simulate different consistency levels.
-- Compare current progress with improved routines.
-- Visualize the impact of small daily improvements over time.
+- Compare current and improved routines.
+- Visualize the impact of daily improvements.
 
-### 🥗 Weekly Nutrition
-- Generate a personalized 7-day meal plan using AI.
-- Review and edit generated meal plans.
-- Organize meals across the week.
-- Save nutrition plans for future reference.
+</td>
+<td width="50%">
 
-### 🧘 Mindfulness Sessions
+### 🥗 AI Nutrition Planning
+- Generate personalized 7-day meal plans.
+- Powered by Google Gemini.
+- Review and edit meal plans.
+- Organize meals throughout the week.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🧘 Mindfulness
 - Dedicated mindfulness experience.
-- Guided breathing visual.
-- Start and track mindfulness sessions.
-- Encourage regular breaks and mental refreshment.
+- Guided breathing visualization.
+- Start and track sessions.
+- Encourage mindful breaks.
+
+</td>
+<td width="50%">
 
 ### 👟 Activity Tracking
-- Native Android step tracking using the device's step sensor.
-- Mobile integration through Capacitor.
+- Native Android step tracking.
+- Device step sensor integration.
+- Capacitor-powered mobile support.
+
+</td>
+</tr>
+</table>
 
 ---
 
-## 🛠️ Tech Stack
+## 🖥️ Application Preview
 
-| Layer | Technologies |
+<p align="center">
+  <img src="docs/S1.png" width="48%" alt="FUTR Dashboard" />
+  &nbsp;
+  <img src="docs/S2.png" width="48%" alt="FUTR Future Simulation" />
+</p>
+
+## ⚙️ Tech Stack
+
+| Category | Technologies |
 |---|---|
 | Frontend | React, Vite, JavaScript, CSS |
 | Backend | Python, FastAPI |
 | Database | SQLite, SQLAlchemy |
-| Validation | Pydantic |
-| AI Integration | Google Gemini API |
-| Mobile Integration | Capacitor, Android, Java |
-| API Communication | REST APIs |
+| Data Validation | Pydantic |
+| AI | Google Gemini API |
+| Mobile | Capacitor, Android, Java |
+| Communication | REST APIs |
+
+---
+
+## 🏗️ Architecture
+
+```text
+                  ┌──────────────────────┐
+                  │      FUTR UI         │
+                  │   React + Vite       │
+                  └──────────┬───────────┘
+                             │
+                          REST API
+                             │
+                  ┌──────────▼───────────┐
+                  │    FastAPI Backend   │
+                  │                      │
+                  │  Routes & Services   │
+                  │  Business Logic      │
+                  │  Data Validation     │
+                  └──────┬────────┬──────┘
+                         │        │
+                  ┌──────▼───┐  ┌─▼────────────┐
+                  │ SQLite   │  │ Gemini API   │
+                  │ Database │  │ AI Nutrition │
+                  └──────────┘  └──────────────┘
+
+                  ┌──────────────────────┐
+                  │  Android Integration │
+                  │ Capacitor + Sensors  │
+                  └──────────────────────┘
+```
 
 ---
 
@@ -80,7 +173,6 @@ FUTR/
 │
 ├── frontend/
 │   ├── android/
-│   │   └── app/
 │   ├── public/
 │   ├── src/
 │   ├── package.json
@@ -92,16 +184,16 @@ FUTR/
 
 ---
 
-## ⚙️ Getting Started
+## 🚀 Getting Started
+
+Follow these steps to run FUTR locally.
 
 ### Prerequisites
-
-Make sure you have the following installed:
 
 - Python 3.10+
 - Node.js and npm
 - Git
-- Android Studio (for Android development)
+- Android Studio (optional, for Android development)
 
 ### 1. Clone the Repository
 
@@ -112,19 +204,13 @@ cd FUTR
 
 ### 2. Backend Setup
 
-Navigate to the backend directory:
-
 ```bash
 cd backend
-```
 
-Create a virtual environment:
-
-```bash
 python -m venv venv
 ```
 
-Activate it:
+Activate the environment:
 
 **Windows PowerShell**
 
@@ -138,113 +224,101 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Create a `.env` file inside the `backend` directory and add the required environment variables:
+Create a `.env` file inside the `backend` directory:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-Start the backend server:
+Start the backend:
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-Backend URL:
+Backend: `http://127.0.0.1:8000`
 
-`http://127.0.0.1:8000`
-
-Interactive API Documentation:
-
-`http://127.0.0.1:8000/docs`
+API Documentation: `http://127.0.0.1:8000/docs`
 
 ### 3. Frontend Setup
 
-Open another terminal and navigate to the frontend:
+Open a new terminal:
 
 ```bash
 cd frontend
-```
-
-Install dependencies:
-
-```bash
 npm install
-```
-
-Start the development server:
-
-```bash
 npm run dev
 ```
 
-Open the local URL provided by Vite.
+Open the local URL displayed by Vite.
 
 ### 4. Android Setup
 
-The Android project is available inside `frontend/android`.
-
-Build the frontend:
+From the frontend directory:
 
 ```bash
 npm run build
-```
-
-Synchronize the Capacitor project:
-
-```bash
 npx cap sync android
-```
-
-Open the Android project:
-
-```bash
 npx cap open android
 ```
 
-You can then build and run the application through Android Studio.
+Run the application through Android Studio.
 
 ---
 
 ## 🗺️ Roadmap
 
-- [x] Daily habit creation and tracking.
-- [x] Productivity dashboard.
-- [x] Consistency analytics.
-- [x] Activity heatmap.
-- [x] Future simulation.
-- [x] AI-powered weekly nutrition planning.
-- [x] Mindfulness session experience.
-- [x] Capacitor Android integration.
-- [ ] Manual step entry for web users.
-- [ ] Enhanced Health Connect integration.
-- [ ] More detailed lifestyle insights.
-- [ ] Improved future projections.
-- [ ] Additional mobile capabilities.
+- [x] Daily habit creation and tracking
+- [x] Productivity dashboard
+- [x] Consistency analytics
+- [x] Activity heatmap
+- [x] Future simulation
+- [x] AI-powered weekly nutrition planning
+- [x] Mindfulness experience
+- [x] Capacitor Android integration
+- [ ] Manual step entry for web users
+- [ ] Enhanced Health Connect integration
+- [ ] More detailed lifestyle insights
+- [ ] Improved future projections
+- [ ] Additional mobile capabilities
 
 ---
 
-## 🚧 Project Status
+## 🔐 Environment Configuration
 
-**FUTR is actively under development.**
+FUTR uses environment variables for external service credentials.
 
-The project is continuously evolving with a focus on improving lifestyle tracking, user experience, analytics, and mobile capabilities.
+Create a `.env` file inside `backend/`:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+**Important:** Never commit API keys, secrets, or environment files to GitHub.
 
 ---
 
 ## 👨‍💻 Developer
 
-**Aditya Dubey**
+<p>
+  <strong>Aditya Dubey</strong><br />
+  Computer Science & Engineering
+</p>
 
-- GitHub: [@adityadubey2211-prog](https://github.com/adityadubey2211-prog)
-- LinkedIn: [Aditya Dubey](https://linkedin.com/in/aditya-dubey-4182432a4/)
+<p>
+  <a href="https://github.com/adityadubey2211-prog">
+    <img src="https://img.shields.io/badge/GitHub-Aditya%20Dubey-181717?style=for-the-badge&logo=github" />
+  </a>
+  <a href="https://linkedin.com/in/aditya-dubey-4182432a4/">
+    <img src="https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin" />
+  </a>
+</p>
 
 ---
 
-<div align="center">
-
-# FUTR 🌱
-
-**Small actions today. A better future tomorrow.**
-
-</div>
+<p align="center">
+  <h2 align="center">🌱 FUTR</h2>
+  <strong>Don't just track your days. Shape your future.</strong>
+  <br />
+  <sub>Built with purpose. Designed for progress.</sub>
+</p>

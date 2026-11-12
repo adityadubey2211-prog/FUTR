@@ -3,6 +3,8 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 import "./App.css";
 import "./Nutrition.css";
 import FutureReport from "./FutureReport";
+import Loader from "./Loader";
+
 
 /* ─────────────── NATIVE PLUGIN ─────────────── */
 
@@ -1793,6 +1795,36 @@ export default function App() {
   const [habits, setHabits] = useState([]);
   const [habitsLoading, setHabitsLoading] = useState(true);
   const [habitsError, setHabitsError] = useState("");
+  const [showLoader, setShowLoader] = useState(true);
+
+  useEffect(() => {
+    const startTime = Date.now();
+
+    const loadData = async () => {
+    try {
+        const [habitsData, logsData] = await Promise.all([
+          apiRequest("/habits/"),
+          apiRequest("/habit-logs/"),
+        ]);
+
+        setHabits(habitsData);
+        setHabitLogs(logsData);
+      } catch (error) {
+        setHabitsError(error.message);
+      } finally {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, 3500 - elapsed);
+
+        setTimeout(() => {
+          setShowLoader(false);
+          setHabitsLoading(false);
+        }, remaining);
+      }
+    };
+
+    loadData();
+  }, []);
+
   const [habitLogs, setHabitLogs] = useState([]);
   const [metrics, setMetrics] = useState(() => {
     const saved = loadJSON(METRICS_KEY, null);
@@ -2144,6 +2176,10 @@ export default function App() {
     .toUpperCase();
 
   /* ─────────────── RENDER ─────────────── */
+
+  if (showLoader) {
+    return <Loader />;
+  }
 
   return (
     <div className="app-shell" data-theme={theme}>
