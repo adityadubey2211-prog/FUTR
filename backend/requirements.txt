@@ -5,3 +5,11 @@ pydantic==2.14.3
 python-dotenv
 google-genai
 PyMuPDF
+fastapi==0.162.2
+uvicorn==0.54.0
+SQLAlchemy==2.1.8
+pydantic==2.14.3
+python-dotenv
+google-genai
+PyMuPDF
+python-multipart
