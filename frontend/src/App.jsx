@@ -1,8 +1,8 @@
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import "./App.css";
 import "./Nutrition.css";
+import FutureReport from "./FutureReport";
 
 /* ─────────────── NATIVE PLUGIN ─────────────── */
 
@@ -55,7 +55,7 @@ const WEEKLY_DAYS = Array.from({ length: 7 }, (_, i) => {
   d.setDate(d.getDate() - (6 - i));
 
   return {
-    iso: d.toISOString().slice(0, 10),
+    iso: toLocalISODate(d),
     label: d.toLocaleDateString("en-US", { weekday: "short" }),
   };
 });
@@ -64,6 +64,7 @@ const TABS = [
   ["◫", "Today"],
   ["◉", "Metrics"],
   ["▦", "Analytics"],
+  ["✦", "Future"],
 ];
 const MINDFULNESS_SESSION_KEY = "futr.mindfulness.session.v1";
 /* ─────────────── HELPERS ─────────────── */
@@ -1792,7 +1793,7 @@ export default function App() {
   const [habits, setHabits] = useState([]);
   const [habitsLoading, setHabitsLoading] = useState(true);
   const [habitsError, setHabitsError] = useState("");
-
+  const [habitLogs, setHabitLogs] = useState([]);
   const [metrics, setMetrics] = useState(() => {
     const saved = loadJSON(METRICS_KEY, null);
 
@@ -1860,7 +1861,8 @@ export default function App() {
           apiRequest("/habits/"),
           apiRequest("/habit-logs/"),
         ]);
-  
+        setHabitLogs(logs);
+
         if (!active) return;
   
         const todayLogs = {};
@@ -1931,7 +1933,7 @@ export default function App() {
         if (!isActive) return;
 
         const steps = Number(result.steps);
-        const date = result.date;
+        const date = result.date || TODAY;
 
         if (!Number.isFinite(steps)) return;
 
@@ -1994,6 +1996,30 @@ export default function App() {
             : h
         )
       );
+      setHabitLogs((current) => {
+        const existing = current.find(
+          (log) =>
+            log.habit_id === id &&
+            log.log_date === TODAY
+        );
+
+        if (existing) {
+          return current.map((log) =>
+            log.habit_id === id && log.log_date === TODAY
+              ? { ...log, completed: nextCompleted }
+              : log
+          );
+        }
+
+        return [
+          ...current,
+          {
+            habit_id: id,
+            log_date: TODAY,
+            completed: nextCompleted,
+          },
+        ];
+      });
     } catch (error) {
       console.error("Habit update failed:", error);
       setHabitsError(error.message);
@@ -2070,33 +2096,39 @@ export default function App() {
         },
       },
     }));
+    
 
   /* ─────────────── WEEKLY SCORES ─────────────── */
 
-  const weekly = useMemo(() => {
-    return WEEKLY_DAYS.map((d, i) =>
-      i === 6 ? score : [18, 55, 32, 86, 58, 79][i]
-    );
-  }, [score]);
+    const weekly = useMemo(() => {
+      return WEEKLY_DAYS.map((day) => {
+        if (habits.length === 0) return 0;
+    
+        const completedCount = habitLogs.filter(
+          (log) =>
+            log.log_date === day.iso &&
+            log.completed
+        ).length;
+    
+        return Math.round(
+          (completedCount / habits.length) * 100
+        );
+      });
+    }, [habitLogs, habits.length]);
 
-  const trendUp = score >= weekly[5];
-
-  /* ─────────────── METRIC HEALTH ─────────────── */
-
-  const metricsWithData = METRIC_DEFS.filter(
-    (m) => metrics[m.id].history[TODAY] != null
-  ).length;
-
-  const metricsAchieved = METRIC_DEFS.filter((m) => {
-    const d = metrics[m.id];
-
-    return (
-      d.target &&
-      d.history[TODAY] != null &&
-      pct(d.history[TODAY], d.target) >= 100
-    );
-  }).length;
-
+    const trendUp = weekly[6] >= weekly[5];
+    const metricsWithData = METRIC_DEFS.filter((m) => {
+      const value = metrics[m.id]?.history?.[TODAY];
+      return value !== undefined && value !== null && value !== "";
+    }).length;
+    const metricsAchieved = METRIC_DEFS.filter((m) => {
+      const target = metrics[m.id]?.target;
+      const value =
+        m.id === "steps" && nativeSteps !== null
+          ? nativeSteps
+          : metrics[m.id]?.history?.[TODAY];
+      return target && value != null && value >= target;
+    }).length;
   /* ─────────────── FUTURE PANEL ─────────────── */
 
   const currentHours = 2 * 180;
@@ -2759,6 +2791,12 @@ export default function App() {
                 </div>
               </section>
             </>
+          )}
+
+          {/* FUTURE REPORT TAB */}
+
+          {activeTab === "Future" && (
+            <FutureReport apiRequest={apiRequest} />
           )}
         </div>
 
