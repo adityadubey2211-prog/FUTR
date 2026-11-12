@@ -139,3 +139,23 @@ def update_habit_log(
     db.refresh(log)
 
     return log
+
+
+from datetime import date
+
+@router.delete("/reset-day")
+def reset_day(
+    target_date: date,
+    db: Session = Depends(get_db)
+):
+    deleted_count = db.query(HabitLog).filter(
+        HabitLog.log_date == target_date
+    ).delete(synchronize_session=False)
+
+    db.commit()
+
+    return {
+        "message": "Daily logs deleted successfully",
+        "date": str(target_date),
+        "deleted": deleted_count
+    }
