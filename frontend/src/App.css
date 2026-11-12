@@ -2476,3 +2476,171 @@ html.cursor-active .cursor-glow {
 .metric-card:hover::before {
   left: 130%;
 }
+
+/* ══════════════════════════════════════
+   HEATMAP — matches the warm FUTR theme
+   (paste at the very end of App.css)
+══════════════════════════════════════ */
+
+.heatmap-section {
+  --hm-0: var(--track);
+  --hm-1: #e8d5c4;
+  --hm-2: #d3b29a;
+  --hm-3: #a98670;
+  --hm-4: #8f6b55;
+
+  margin-top: 24px;
+  padding: 22px 24px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  box-shadow: 0 5px 18px var(--shadow);
+  overflow: hidden;
+  transition: background .4s, border-color .4s;
+}
+
+.app-shell[data-theme="dark"] .heatmap-section {
+  --hm-1: #4a3b2e;
+  --hm-2: #7a5d47;
+  --hm-3: #b88d6c;
+  --hm-4: #f0c9a8;
+}
+
+.heatmap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.heatmap-header h3 {
+  margin: 0 0 4px;
+  font-family: "Playfair Display", serif;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.heatmap-header p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.heatmap-header > span {
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--chip);
+  color: var(--accent-strong);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(53, minmax(0, 1fr));
+  grid-template-rows: repeat(7, minmax(0, 1fr));
+  grid-auto-flow: column;
+  gap: 3px;
+  width: 100%;
+}
+
+.heatmap-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 0;
+  border-radius: 3px;
+  background: var(--hm-0);
+  transition: transform .18s ease, background .3s;
+}
+
+.heatmap-cell.level-0 { background: var(--hm-0); }
+.heatmap-cell.level-1 { background: var(--hm-1); }
+.heatmap-cell.level-2 { background: var(--hm-2); }
+.heatmap-cell.level-3 { background: var(--hm-3); }
+.heatmap-cell.level-4 { background: var(--hm-4); }
+
+.heatmap-cell:hover {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 2px var(--panel), 0 0 8px var(--shadow-strong);
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  margin-top: 14px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--soft);
+}
+
+.heatmap-legend .heatmap-cell {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 11px;
+  aspect-ratio: auto;
+}
+
+.heatmap-legend .heatmap-cell:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 700px) {
+  .heatmap-section { padding: 16px; }
+  .heatmap-grid { gap: 2px; }
+  .heatmap-cell { border-radius: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heatmap-cell { transition: none; }
+}
+
+
+/* ── Heatmap month labels ── */
+
+.heatmap-months {
+  display: grid;
+  grid-template-columns: repeat(53, minmax(0, 1fr));
+  gap: 3px;
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--soft);
+  letter-spacing: 0.3px;
+}
+
+.heatmap-months span {
+  white-space: nowrap;
+  overflow: visible;
+}
+
+@media (max-width: 700px) {
+  .heatmap-months { gap: 2px; font-size: 9px; }
+}
+/* ── Heatmap: months and cells share one grid ── */
+
+.heatmap-grid {
+  grid-template-columns: repeat(53, minmax(0, 1fr));
+  grid-template-rows: auto repeat(7, minmax(0, 1fr));
+  grid-auto-flow: row;
+  gap: 3px;
+}
+
+.heatmap-month {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--soft);
+  white-space: nowrap;
+  overflow: visible;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 700px) {
+  .heatmap-grid { gap: 2px; }
+  .heatmap-month { font-size: 9px; }
+}

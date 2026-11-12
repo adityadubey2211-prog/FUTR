@@ -873,8 +873,16 @@ function getCurrentWeekDates() {
 }
 
 
-function Heatmap({ habits }) {
+function Heatmap({ habitLogs }) {
   const today = new Date();
+
+  // Number of completed habits for each date, from the saved logs.
+  const completedByDate = {};
+  habitLogs.forEach((log) => {
+    if (log.completed) {
+      completedByDate[log.log_date] = (completedByDate[log.log_date] || 0) + 1;
+    }
+  });
 
   const days = Array.from({ length: 365 }, (_, index) => {
     const date = new Date(today);
@@ -882,15 +890,9 @@ function Heatmap({ habits }) {
 
     const dateKey = toLocalISODate(date);
 
-    // Today's completion count comes from current habits.
-    const count =
-      dateKey === TODAY
-        ? habits.filter((habit) => habit.completed).length
-        : 0;
-
     return {
       date: dateKey,
-      count,
+      count: completedByDate[dateKey] || 0,
     };
   });
 
@@ -901,6 +903,30 @@ function Heatmap({ habits }) {
     if (count <= 4) return 3;
     return 4;
   };
+
+  // Each grid column is one week (7 days). Show a month name at the
+  // first column where a new month begins.
+    // Group consecutive weeks (grid columns) that fall in the same month.
+  const weekCount = Math.ceil(days.length / 7);
+  const monthSegments = [];
+
+  for (let col = 0; col < weekCount; col++) {
+    const first = days[col * 7];
+    const d = new Date(`${first.date}T00:00:00`);
+    const month = d.getMonth();
+    const last = monthSegments[monthSegments.length - 1];
+
+    if (last && last.month === month) {
+      last.span += 1;
+    } else {
+      monthSegments.push({
+        month,
+        name: d.toLocaleDateString("en-US", { month: "short" }),
+        start: col,
+        span: 1,
+      });
+    }
+  }
 
   const activeDays = days.filter((day) => day.count > 0).length;
 
@@ -915,10 +941,21 @@ function Heatmap({ habits }) {
       </div>
 
       <div className="heatmap-grid">
-        {days.map((day) => (
+        {monthSegments.map((m) => (
+          <span
+            key={`m-${m.month}-${m.start}`}
+            className="heatmap-month"
+            style={{ gridColumn: `${m.start + 1} / span ${m.span}`, gridRow: 1 }}
+          >
+            {m.span >= 2 ? m.name : ""}
+          </span>
+        ))}
+
+        {days.map((day, i) => (
           <div
             key={day.date}
             className={`heatmap-cell level-${getLevel(day.count)}`}
+            style={{ gridColumn: Math.floor(i / 7) + 1, gridRow: (i % 7) + 2 }}
             title={`${day.date}: ${day.count} habits completed`}
           />
         ))}
@@ -927,10 +964,7 @@ function Heatmap({ habits }) {
       <div className="heatmap-legend">
         <span>Less</span>
         {[0, 1, 2, 3, 4].map((level) => (
-          <div
-            key={level}
-            className={`heatmap-cell level-${level}`}
-          />
+          <div key={level} className={`heatmap-cell level-${level}`} />
         ))}
         <span>More</span>
       </div>
@@ -1996,6 +2030,24 @@ export default function App() {
     };
   }, []);
 
+  // Reload at midnight so habit checkboxes reset for the new day.
+  // The interval also catches the date change after the laptop wakes up.
+  useEffect(() => {
+    const checkDay = () => {
+      if (toLocalISODate(new Date()) !== TODAY) {
+        window.location.reload();
+      }
+    };
+
+    const id = setInterval(checkDay, 15000);
+    document.addEventListener("visibilitychange", checkDay);
+
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", checkDay);
+    };
+  }, []);
+
   /* ─────────────── HABIT HELPERS ─────────────── */
 
   const completed = habits.filter((h) => h.completed).length;
@@ -2611,7 +2663,7 @@ export default function App() {
                 </div>
               </section>
               {/* CONSISTENCY MAP — BOTTOM OF TODAY */}
-              <Heatmap habits={habits} />
+              <Heatmap habitLogs={habitLogs} />
             </>
           )}
 
