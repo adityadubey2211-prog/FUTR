@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import "./FutureReport.css";
-
+import "./Futurereport.css";
 /* ─────────────── CONSTANTS ─────────────── */
 
 const STORAGE_KEY = "futr.futurereport.v1";

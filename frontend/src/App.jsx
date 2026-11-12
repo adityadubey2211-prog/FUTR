@@ -4,7 +4,7 @@ import "./App.css";
 import "./Nutrition.css";
 import FutureReport from "./Futurereport.jsx";
 import Loader from "./Loader";
-import "./Futurereport.css";
+
 
 /* ─────────────── NATIVE PLUGIN ─────────────── */
 
