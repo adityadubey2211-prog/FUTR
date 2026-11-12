@@ -4,3 +4,4 @@ SQLAlchemy==2.1.8
 pydantic==2.14.3
 python-dotenv
 google-genai
+PyMuPDF
