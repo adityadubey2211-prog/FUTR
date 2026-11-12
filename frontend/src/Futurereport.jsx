@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./Futurereport.css";
+
 /* ─────────────── CONSTANTS ─────────────── */
 
 const STORAGE_KEY = "futr.futurereport.v1";
@@ -137,6 +138,153 @@ function friendlyError(err) {
     return "The server rejected the request. Please check your goal and try again.";
   }
   return message;
+}
+
+/* ─────────────── LETTER DOWNLOAD (PNG) ─────────────── */
+
+const LETTER_W = 1000;
+const LETTER_PAD = 110;
+const LETTER_TEXT = "#3b2a1a";
+const LETTER_TITLE_FONT = 'italic 40px Georgia, "Times New Roman", serif';
+const LETTER_BODY_FONT = 'italic 27px Georgia, "Times New Roman", serif';
+const LETTER_CLOSING_FONT = 'italic 28px Georgia, "Times New Roman", serif';
+
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = "";
+
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+// Works out every line of text and its position first, so the canvas can be
+// sized to fit the whole letter before anything is drawn.
+function buildLetterLayout(ctx, data) {
+  const maxWidth = LETTER_W - LETTER_PAD * 2;
+  const ops = [];
+  let y = 150;
+
+  const addLines = (lines, font, align, x, lineHeight) => {
+    ctx.font = font;
+    for (const text of lines) {
+      ops.push({ text, font, align, x, y });
+      y += lineHeight;
+    }
+  };
+
+  // Title, centred.
+  const title = asText(data.title) || "A Note from Your Future Self";
+  ctx.font = LETTER_TITLE_FONT;
+  addLines(
+    wrapCanvasText(ctx, title, maxWidth),
+    LETTER_TITLE_FONT,
+    "center",
+    LETTER_W / 2,
+    56
+  );
+  y += 34;
+
+  // Body, left aligned, one block per paragraph.
+  const paragraphs = asText(data.letter)
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  for (const p of paragraphs) {
+    ctx.font = LETTER_BODY_FONT;
+    addLines(
+      wrapCanvasText(ctx, p, maxWidth),
+      LETTER_BODY_FONT,
+      "left",
+      LETTER_PAD,
+      42
+    );
+    y += 18;
+  }
+
+  // Closing line, left aligned.
+  const closing = asText(data.closing_message);
+  if (closing) {
+    y += 20;
+    ctx.font = LETTER_CLOSING_FONT;
+    addLines(
+      wrapCanvasText(ctx, closing, maxWidth),
+      LETTER_CLOSING_FONT,
+      "left",
+      LETTER_PAD,
+      44
+    );
+  }
+
+  return { ops, height: y + 140 };
+}
+
+function downloadLetterImage(data) {
+  const canvas = document.createElement("canvas");
+  const measureCtx = canvas.getContext("2d");
+
+  const { ops, height } = buildLetterLayout(measureCtx, data);
+
+  const W = LETTER_W;
+  const H = Math.max(900, height);
+
+  canvas.width = W;
+  canvas.height = H;
+
+  const ctx = canvas.getContext("2d");
+
+  // Parchment base with a warm, uneven tone.
+  const base = ctx.createLinearGradient(0, 0, W, H);
+  base.addColorStop(0, "#ecdcb9");
+  base.addColorStop(0.5, "#dcc298");
+  base.addColorStop(1, "#c9a878");
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, W, H);
+
+  // Darker, burnt-looking edges.
+  const vignette = ctx.createRadialGradient(
+    W / 2,
+    H / 2,
+    H * 0.35,
+    W / 2,
+    H / 2,
+    H * 0.75
+  );
+  vignette.addColorStop(0, "rgba(90, 58, 30, 0)");
+  vignette.addColorStop(1, "rgba(90, 58, 30, 0.55)");
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, W, H);
+
+  // Text.
+  ctx.fillStyle = LETTER_TEXT;
+  ctx.textBaseline = "alphabetic";
+  for (const op of ops) {
+    ctx.font = op.font;
+    ctx.textAlign = op.align;
+    ctx.fillText(op.text, op.x, op.y);
+  }
+
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "future-self-letter.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, "image/png");
 }
 
 /* ─────────────── SMALL UI PIECES ─────────────── */
@@ -768,21 +916,33 @@ function Letter({ data }) {
     .filter(Boolean);
 
   return (
-    <article className="fr-letter">
-      <div className="fr-letter-seal">✦</div>
+    <>
+      <article className="fr-letter">
+        <div className="fr-letter-seal">✦</div>
 
-      {asText(data.title) && <h3>{asText(data.title)}</h3>}
+        {asText(data.title) && <h3>{asText(data.title)}</h3>}
 
-      <div className="fr-letter-body">
-        {paragraphs.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
+        <div className="fr-letter-body">
+          {paragraphs.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </div>
+
+        {asText(data.closing_message) && (
+          <p className="fr-letter-closing">{asText(data.closing_message)}</p>
+        )}
+      </article>
+
+      <div className="fr-letter-actions">
+        <button
+          type="button"
+          className="fr-ghost"
+          onClick={() => downloadLetterImage(data)}
+        >
+          Download letter (PNG)
+        </button>
       </div>
-
-      {asText(data.closing_message) && (
-        <p className="fr-letter-closing">{asText(data.closing_message)}</p>
-      )}
-    </article>
+    </>
   );
 }
 

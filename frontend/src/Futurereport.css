@@ -764,3 +764,8 @@
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
+.fr-letter-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 22px;
+}
