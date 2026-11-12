@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import "./App.css";
 import "./Nutrition.css";
-import FutureReport from "./FutureReport";
+import FutureReport from "./Futurereport.jsx";
 import Loader from "./Loader";
 
 
