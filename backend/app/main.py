@@ -15,6 +15,8 @@ from fastapi import UploadFile, File
 from app.services.nutrition_service import extract_pdf_text
 from app.models.future_report import FutureReport
 from app.routes import future_report
+from app.models.user import User
+from app.routes import auth
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI(
@@ -44,6 +46,7 @@ app.include_router(analytics.router)
 app.include_router(dashboard.router)
 app.include_router(nutrition.router)
 app.include_router(future_report.router)
+app.include_router(auth.router)
 
 
 @app.get("/")
