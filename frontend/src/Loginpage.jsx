@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./LoginPage.css";
+import "./Loginpage.css";
 
 /*
   Login / Sign-up screen for FUTR.
