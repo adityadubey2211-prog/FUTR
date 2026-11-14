@@ -4,7 +4,7 @@ import "./App.css";
 import "./Nutrition.css";
 import FutureReport from "./Futurereport.jsx";
 import Loader from "./Loader";
-
+import LoginPage from "./LoginPage";
 
 /* ─────────────── NATIVE PLUGIN ─────────────── */
 
@@ -1830,6 +1830,7 @@ export default function App() {
   const [habitsLoading, setHabitsLoading] = useState(true);
   const [habitsError, setHabitsError] = useState("");
   const [showLoader, setShowLoader] = useState(true);
+  const [isAuthed, setIsAuthed] = useState(false); // resets on every page load
 
   useEffect(() => {
     const startTime = Date.now();
@@ -2227,10 +2228,29 @@ export default function App() {
     })
     .toUpperCase();
 
+  /* ─────────────── LOGIN ─────────────── */
+
+  // Replace the body of this function with your real auth call once the
+  // backend has /auth/login and /auth/signup endpoints.
+  const handleLogin = async ({ mode, name, email, password }) => {
+    await apiRequest(mode === "login" ? "/auth/login" : "/auth/signup", {
+      method: "POST",
+      body: JSON.stringify(
+        mode === "login" ? { email, password } : { name, email, password }
+      ),
+    });
+
+    setIsAuthed(true);
+  };
+
   /* ─────────────── RENDER ─────────────── */
 
   if (showLoader) {
     return <Loader />;
+  }
+
+  if (!isAuthed) {
+    return <LoginPage onLogin={handleLogin} />;
   }
 
   return (
