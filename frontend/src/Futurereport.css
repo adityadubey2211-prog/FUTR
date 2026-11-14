@@ -769,3 +769,160 @@
   justify-content: center;
   margin-top: 22px;
 }
+
+/* ══════════════════════════════════════
+   FUTURE REPORT — MOBILE POLISH
+   (paste at the very end of Futurereport.css)
+══════════════════════════════════════ */
+
+@media (max-width: 800px) {
+
+  /* ── layout ── */
+  .fr-root { padding: 0 0 calc(env(safe-area-inset-bottom) + 110px); }
+  .fr-report { gap: 40px; }
+
+  /* ── hero + form ── */
+  .fr-hero { margin-bottom: 24px; }
+  .fr-hero h1 { font-size: 1.7rem; margin: 6px 0 10px; }
+  .fr-hero-sub { font-size: 12px; margin-bottom: 20px; }
+
+  .fr-form { padding: 16px; border-radius: 18px; }
+  .fr-form label { font-size: 9px; }
+  .fr-form textarea {
+    font-size: 16px; /* stops iOS zoom on focus */
+    min-height: 110px;
+    padding: 13px 14px;
+  }
+  .fr-form-foot { flex-direction: column; align-items: stretch; gap: 10px; }
+  .fr-count { text-align: right; }
+  .fr-form-actions { flex-direction: column; width: 100%; }
+  .fr-primary,
+  .fr-ghost {
+    width: 100%;
+    min-height: 48px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .fr-error { padding: 12px 14px; }
+
+  /* ── loading + placeholder ── */
+  .fr-loading,
+  .fr-placeholder { padding: 30px 18px; border-radius: 18px; margin-top: 16px; }
+  .fr-loading h3,
+  .fr-placeholder h3 { font-size: 18px; }
+
+  /* ── section nav: swipeable chips ── */
+  .fr-nav {
+    top: calc(env(safe-area-inset-top) + 6px);
+    padding: 6px;
+    gap: 6px;
+    scroll-snap-type: x proximity;
+    border-radius: 14px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+  }
+  .fr-nav button {
+    min-height: 40px;
+    padding: 8px 13px;
+    font-size: 12px;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+
+  /* ── section heads ── */
+  .fr-section { scroll-margin-top: 70px; }
+  .fr-section-head { margin-bottom: 16px; }
+  .fr-section-head h2 { font-size: 1.3rem; }
+  .fr-eyebrow { font-size: 9px; letter-spacing: 1.4px; }
+
+  /* ── cards ── */
+  .fr-card { padding: 18px; border-radius: 18px; }
+  .fr-card h3 { font-size: 18px; }
+  .fr-goal-card { padding: 22px 20px; }
+  .fr-goal-card h3 { font-size: 1.2rem; }
+
+  .fr-card-top { gap: 8px; }
+
+  /* ── stats: 2 per row ── */
+  .fr-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .fr-stat { padding: 16px; border-radius: 16px; }
+  .fr-stat strong { font-size: 24px; }
+  .fr-stat small { font-size: 9px; letter-spacing: 1px; }
+
+  /* ── consistency + highlights ── */
+  .fr-two-col { gap: 14px; }
+  .fr-window-row { grid-template-columns: 74px 1fr; gap: 10px; font-size: 11px; }
+  .fr-meter b { min-width: 40px; font-size: 11px; }
+
+  /* ── habit breakdown ── */
+  .fr-habit-row { padding: 14px; gap: 12px; }
+  .fr-habit-meters { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .fr-habit-meters small { font-size: 9px; }
+  .fr-habit-meters .fr-meter { flex-direction: column; align-items: stretch; gap: 4px; }
+  .fr-habit-meters .fr-meter b { text-align: left; min-width: 0; }
+  .fr-habit-streaks { grid-template-columns: repeat(3, auto); justify-content: space-between; gap: 6px; }
+
+  /* ── mind map: scrolls sideways so text stays readable ── */
+  .fr-map-card { padding: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .fr-map { min-width: 620px; }
+  .fr-map-card .fr-note { font-size: 10px; }
+  .fr-branch-detail { padding: 18px; }
+  .fr-two-col.fr-flat { gap: 16px; }
+
+  /* ── timeline ── */
+  .fr-timeline { padding-left: 26px; gap: 16px; }
+  .fr-timeline::before { left: 6px; }
+  .fr-tl-dot { left: -26px; top: 22px; width: 14px; height: 14px; border-width: 2px; }
+  .fr-tl-badge { font-size: 10px; padding: 4px 11px; }
+  .fr-progress-note { padding: 10px 12px; }
+
+  /* ── gap analysis: current → required stacks ── */
+  .fr-compare { grid-template-columns: 1fr; gap: 8px; }
+  .fr-compare-arrow { transform: rotate(90deg); justify-self: center; font-size: 16px; }
+  .fr-suggest { font-size: 11px; padding: 10px 12px; }
+
+  /* ── roadmap + 7-day plan ── */
+  .fr-grid--3,
+  .fr-grid--2 { grid-template-columns: 1fr; gap: 14px; }
+  .fr-grid--days { grid-template-columns: 1fr; gap: 14px; }
+  .fr-phase-num { width: 34px; height: 34px; font-size: 16px; }
+  .fr-checklist li { font-size: 12px; padding: 10px 12px 10px 34px; }
+  .fr-day-head strong { font-size: 30px; }
+
+  /* ── letter ── */
+  .fr-letter {
+    padding: 34px 20px 26px;
+    border-radius: 18px;
+  }
+  .fr-letter-seal { top: -16px; width: 36px; height: 36px; font-size: 14px; }
+  .fr-letter h3 { font-size: 1.3rem; margin-bottom: 16px; }
+  .fr-letter-body { gap: 12px; }
+  .fr-letter-body p { font-size: 0.95rem; line-height: 1.75; }
+  .fr-letter-closing { text-align: left; font-size: 0.95rem; margin-top: 20px; padding-top: 14px; }
+  .fr-letter-actions { margin-top: 18px; }
+  .fr-letter-actions .fr-ghost { width: 100%; min-height: 46px; }
+
+  .fr-disclaimer { font-size: 9px; padding: 0 8px; }
+}
+
+/* small phones */
+@media (max-width: 380px) {
+  .fr-hero h1 { font-size: 1.45rem; }
+  .fr-stats { grid-template-columns: 1fr; }
+  .fr-habit-meters { grid-template-columns: 1fr; }
+  .fr-habit-streaks { grid-template-columns: 1fr; }
+  .fr-letter { padding: 30px 16px 22px; }
+}
+
+/* touch devices: no stuck hover lift */
+@media (hover: none) {
+  .fr-hover:hover,
+  .fr-habit-row:hover {
+    transform: none;
+    box-shadow: inherit;
+    background: inherit;
+  }
+  .fr-nav button:hover { background: transparent; color: var(--muted); }
+}

@@ -435,3 +435,213 @@
     display: none;
   }
 }
+
+
+/* ══════════════════════════════════════
+   NUTRITION — MOBILE POLISH
+   (paste at the very end of Nutrition.css)
+══════════════════════════════════════ */
+
+@media (max-width: 800px) {
+
+  /* ── header ── */
+  .nutrition-panel { padding: 18px; border-radius: 18px; }
+  .nutrition-header { align-items: flex-start; gap: 10px; }
+  .nutrition-header h2 { font-size: 20px; margin: 4px 0 2px; }
+  .nutrition-subtitle { font-size: 11px; }
+  .nutrition-icon { font-size: 28px; }
+  .nutrition-header-actions { flex-shrink: 0; }
+  .nutrition-toggle-btn {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  /* ── AI header + generator ── */
+  .nutrition-ai-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px;
+  }
+  .nutrition-ai-header button,
+  .nutrition-generator-form button[type="submit"] {
+    width: 100%;
+    min-height: 46px;
+    font-size: 13px;
+  }
+
+  .nutrition-generator-form { padding: 16px; border-radius: 14px; }
+  .nutrition-generator-form h3 { font-size: 17px; }
+  .nutrition-form-grid { grid-template-columns: 1fr; gap: 12px; }
+  .nutrition-form-grid label { font-size: 10px; }
+  .nutrition-form-grid input,
+  .nutrition-form-grid select,
+  .nutrition-form-grid textarea {
+    min-height: 44px;
+    font-size: 16px; /* stops iOS zoom on focus */
+  }
+
+  /* ── PDF upload ── */
+  .nutrition-upload {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px;
+  }
+  .nutrition-file-label {
+    justify-content: center;
+    min-height: 46px;
+    font-size: 12px;
+  }
+  .nutrition-file-name { text-align: center; min-width: 0; }
+  .nutrition-upload > button {
+    width: 100%;
+    min-height: 46px;
+    font-size: 13px;
+  }
+
+  /* ── plan heading ── */
+  .nutrition-plan-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin: 20px 0 14px;
+  }
+  .nutrition-plan-heading > div { width: 100%; }
+  .nutrition-plan-heading input {
+    max-width: none;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .nutrition-save-btn {
+    width: 100%;
+    min-height: 46px;
+    font-size: 13px;
+  }
+
+  /* ── day tabs: swipeable pills ── */
+  .nutrition-day-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin: 14px -18px 16px;
+    padding: 4px 18px 8px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .nutrition-day-tabs::-webkit-scrollbar { display: none; }
+  .nutrition-day-tabs button {
+    flex: 0 0 64px;
+    min-height: 58px;
+    padding: 8px 4px;
+    border-radius: 14px;
+    scroll-snap-align: center;
+  }
+  .nutrition-day-tabs button span { font-size: 12px; }
+  .nutrition-day-tabs button small { font-size: 9px; }
+
+  /* ── selected day heading ── */
+  .nutrition-day-heading {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .nutrition-day-heading h3 { font-size: 17px; }
+  .nutrition-progress { font-size: 10px; padding: 5px 10px; }
+
+  /* ── meals: card layout instead of a wide table ── */
+  .nutrition-table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+  .nutrition-table,
+  .nutrition-table tbody,
+  .nutrition-table tr,
+  .nutrition-table td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+  .nutrition-table thead { display: none; }
+
+  .nutrition-table tbody tr {
+    position: relative;
+    margin-bottom: 12px;
+    padding: 14px 14px 12px;
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    background: var(--input-bg);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+    align-items: start;
+  }
+  .nutrition-table tbody tr.meal-completed {
+    background: var(--good-bg);
+    border-color: transparent;
+  }
+
+  .nutrition-table td { padding: 0; border: 0; }
+
+  /* meal type on the left, check on the right */
+  .nutrition-table td:nth-child(1) { grid-column: 1; grid-row: 1; min-width: 0; }
+  .nutrition-table td:nth-child(3) {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+  .nutrition-table td:nth-child(2) { grid-column: 1 / -1; grid-row: 2; min-width: 0; }
+
+  .nutrition-meal-type,
+  .nutrition-meal-name,
+  .nutrition-table textarea {
+    min-height: 40px;
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+  .nutrition-table textarea { font-size: 13px; min-height: 52px; }
+
+  .nutrition-check-cell input {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+  }
+
+  /* ── empty states ── */
+  .nutrition-empty { padding: 28px 12px 20px; }
+  .nutrition-empty > span { font-size: 30px; }
+  .nutrition-empty h3 { font-size: 17px; }
+  .nutrition-empty-day { padding: 22px 14px; font-size: 12px; }
+
+  /* ── messages ── */
+  .nutrition-message,
+  .nutrition-error { font-size: 12px; padding: 10px 12px; }
+}
+
+/* small phones */
+@media (max-width: 380px) {
+  .nutrition-panel { padding: 14px; }
+  .nutrition-header h2 { font-size: 18px; }
+  .nutrition-day-tabs button { flex-basis: 56px; }
+  .nutrition-table tbody tr { padding: 12px; }
+}
+
+/* touch devices: no stuck hover lift */
+@media (hover: none) {
+  .nutrition-upload:hover,
+  .nutrition-ai-header:hover,
+  .nutrition-generator-form:hover,
+  .nutrition-empty:hover,
+  .nutrition-empty-day:hover,
+  .nutrition-table-wrap:hover,
+  .nutrition-day-tabs button:hover,
+  .nutrition-toggle-btn:hover,
+  .nutrition-save-btn:hover,
+  .nutrition-ai-header button:hover,
+  .nutrition-upload > button:hover {
+    transform: none;
+  }
+}

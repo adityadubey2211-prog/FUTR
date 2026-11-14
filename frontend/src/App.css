@@ -2644,3 +2644,207 @@ html.cursor-active .cursor-glow {
   .heatmap-grid { gap: 2px; }
   .heatmap-month { font-size: 9px; }
 }
+
+/* ══════════════════════════════════════
+   MOBILE POLISH
+   (paste at the very end of App.css)
+══════════════════════════════════════ */
+
+@media (max-width: 800px) {
+
+  /* ── layout ── */
+  .app-shell { flex-direction: column; }
+
+  .main-content {
+    width: 100%;
+    max-width: 100%;
+    padding: calc(env(safe-area-inset-top) + 20px) 16px
+             calc(env(safe-area-inset-bottom) + 110px);
+  }
+
+  /* ── top bar ── */
+  .topbar {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .topbar h1 { font-size: 26px; }
+  .welcome-text { font-size: 12px; }
+  .topbar-right { gap: 10px; }
+  .theme-toggle { width: 40px; height: 40px; }
+  .top-avatar { width: 40px; height: 40px; font-size: 14px; }
+  .date-pill { display: none; }
+
+  /* ── panels & spacing ── */
+  .panel { padding: 18px; border-radius: 18px; }
+  .overview-grid { gap: 14px; }
+  .lower-grid { gap: 14px; margin-top: 22px; }
+  .section-block { margin-top: 26px; }
+  .section-heading { flex-wrap: wrap; }
+  .panel-heading h2,
+  .section-heading h2 { font-size: 19px; }
+
+  /* ── score ring: side by side ── */
+  .score-content {
+    flex-direction: row;
+    gap: 12px;
+    min-height: auto;
+  }
+  .score-ring { width: 112px; height: 112px; }
+  .score-inner { width: 94px; height: 94px; }
+  .score-inner strong { font-size: 28px; }
+  .score-caption { max-width: none; text-align: left; }
+  .score-caption p { margin: 6px 0 10px; }
+
+  /* ── metrics: 2 columns ── */
+  .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .metric-card { min-height: 140px; padding: 14px; border-radius: 16px; }
+  .metric-value { font-size: 20px; }
+  .metrics-detail-grid { gap: 14px; }
+  .mdc-target-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ── form controls: touch-friendly ── */
+  .mdc-input-row { flex-wrap: wrap; }
+  .mdc-input-row input {
+    flex: 1 1 140px;
+    min-height: 44px;
+    font-size: 16px; /* stops iOS zoom on focus */
+  }
+  .mdc-input-row button { min-height: 44px; }
+
+  .add-habit-form { flex-direction: column; }
+  .add-habit-form input,
+  .add-habit-form select,
+  .add-habit-form button {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /* ── habits ── */
+  .habit-main { min-height: 52px; }
+  .habit-row { min-height: 52px; }
+  .habit-delete { opacity: 1; width: 34px; height: 34px; }
+  .add-habit-button { min-height: 48px; padding: 14px; }
+
+  /* ── future panel ── */
+  .future-avatars { gap: 14px; }
+  .effort-slider { margin: 14px 0; }
+
+  /* ── mindfulness: stack vertically ── */
+  .mindfulness-start-area {
+    flex-direction: column;
+    text-align: center;
+    gap: 18px;
+    padding: 22px 18px;
+  }
+  .mindfulness-start-content { max-width: none; }
+  .mindfulness-benefits { justify-content: center; }
+  .mindfulness-breathing-visual { width: 130px; height: 130px; }
+  .mindfulness-start-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+  .mindfulness-actions button { min-height: 44px; min-width: 110px; }
+
+  /* setup modal becomes a bottom sheet */
+  .mindfulness-modal-overlay { place-items: end center; padding: 0; }
+  .mindfulness-modal {
+    max-width: 100%;
+    border-radius: 24px 24px 0 0;
+    padding: 26px 20px calc(env(safe-area-inset-bottom) + 22px);
+    animation: sheetUp .35s cubic-bezier(.22,1,.36,1) both;
+  }
+  .mindfulness-presets button { min-height: 42px; min-width: 52px; }
+
+  /* ── nutrition ── */
+  .nutrition-day-tabs {
+    scroll-snap-type: x mandatory;
+    margin-inline: -4px;
+    padding-inline: 4px;
+  }
+  .nutrition-day-tabs button {
+    flex: 0 0 72px;
+    min-height: 56px;
+    scroll-snap-align: start;
+  }
+  .nutrition-table { min-width: 520px; }
+  .nutrition-toggle-btn,
+  .nutrition-save-btn { min-height: 42px; }
+
+  /* ── heatmap ── */
+  .heatmap-section { padding: 16px; }
+  .heatmap-header > span { font-size: 10px; }
+
+  /* ── footer ── */
+  .footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    padding-bottom: 8px;
+  }
+
+  /* ── bottom navigation: floating glass bar ── */
+  .mobile-nav {
+    left: 12px;
+    right: 12px;
+    bottom: calc(env(safe-area-inset-bottom) + 12px);
+    padding: 6px;
+    gap: 4px;
+    border-radius: 22px;
+    background: color-mix(in srgb, var(--panel) 88%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 14px 34px var(--shadow-strong);
+  }
+  .mobile-nav button {
+    min-height: 54px;
+    border-radius: 16px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .2px;
+    transition: background .3s ease, color .3s ease, transform .2s ease;
+  }
+  .mobile-nav button span {
+    font-size: 19px;
+    line-height: 1;
+    transition: transform .3s ease;
+  }
+  .mobile-nav button.active {
+    background: linear-gradient(135deg, var(--hover), var(--chip));
+    color: var(--text-strong);
+  }
+  .mobile-nav button.active span { transform: translateY(-1px) scale(1.12); }
+  .mobile-nav button:active { transform: scale(.96); }
+}
+
+/* small phones */
+@media (max-width: 380px) {
+  .metrics-grid { grid-template-columns: 1fr; }
+  .mdc-target-row { grid-template-columns: 1fr; }
+  .topbar h1 { font-size: 23px; }
+  .score-ring { width: 100px; height: 100px; }
+  .score-inner { width: 84px; height: 84px; }
+}
+
+/* touch devices: remove hover-only effects that feel stuck */
+@media (hover: none) {
+  .panel:hover,
+  .metric-card:hover,
+  .habit-row:hover,
+  .heatmap-cell:hover {
+    transform: none;
+    box-shadow: inherit;
+  }
+  .metric-card:hover::after,
+  .dashboard-card:hover::before,
+  .lifestyle-card:hover::before,
+  .metric-card:hover::before { left: -75%; }
+}
+
+@keyframes sheetUp {
+  from { opacity: 0; transform: translateY(40px); }
+}
