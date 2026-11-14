@@ -3,55 +3,31 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies.auth import get_current_user
+
 from app.models.user import User
+from app.models.habit import Habit
+from app.models.habit_log import HabitLog
+from app.models.nutrition import DietPlan
+from app.models.future_report import FutureReport
+
 from app.schemas.user import (
     UserSignup,
     UserLogin,
     TokenResponse
 )
+
 from app.services.auth_service import (
     hash_password,
     verify_password,
     create_access_token
 )
-from fastapi import Header
-from app.services.auth_service import decode_access_token
 
 
-
-router = APIRouter(prefix="/auth", tags=["Authentication"])
-
-
-def get_current_user(
-    authorization: str = Header(None),
-    db: Session = Depends(get_db)
-):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Not authenticated"
-        )
-
-    token = authorization.split(" ")[1]
-    user_id = decode_access_token(token)
-
-    if not user_id:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired token"
-        )
-
-    user = db.query(User).filter(
-        User.id == int(user_id)
-    ).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="User not found"
-        )
-
-    return user
+router = APIRouter(
+    prefix="/auth",
+    tags=["Authentication"]
+)
 
 
 @router.post("/signup", response_model=TokenResponse, status_code=201)
@@ -136,9 +112,49 @@ def delete_account(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    db.delete(current_user)
-    db.commit()
+    try:
+        # 1. Find user's habits
+        habits = db.query(Habit).filter(
+            Habit.user_id == current_user.id
+        ).all()
 
-    return {
-        "message": "Account deleted successfully"
-    }
+        habit_ids = [habit.id for habit in habits]
+
+        # 2. Delete related habit logs
+        if habit_ids:
+            db.query(HabitLog).filter(
+                HabitLog.habit_id.in_(habit_ids)
+            ).delete(synchronize_session=False)
+
+        # 3. Delete user's diet plans
+        diet_plans = db.query(DietPlan).filter(
+            DietPlan.user_id == current_user.id
+        ).all()
+
+        for plan in diet_plans:
+            db.delete(plan)
+
+        # 4. Delete user's future reports
+        db.query(FutureReport).filter(
+            FutureReport.user_id == current_user.id
+        ).delete(synchronize_session=False)
+
+        # 5. Delete user's habits
+        for habit in habits:
+            db.delete(habit)
+
+        # 6. Delete user account
+        db.delete(current_user)
+
+        db.commit()
+
+        return {
+            "message": "Account and associated data deleted successfully"
+        }
+
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Could not delete account"
+        )

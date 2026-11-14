@@ -15,6 +15,7 @@ const Steps = registerPlugin("Steps");
 const HABITS_KEY = "futr.habits.v2";
 const METRICS_KEY = "futr.metrics.v2";
 const THEME_KEY = "futr.theme.v1";
+const TOKEN_KEY = "access_token";
 const CATEGORIES = ["Learning", "Personal", "Fitness", "Health"];
 function toLocalISODate(date) {
   const year = date.getFullYear();
@@ -86,16 +87,46 @@ function saveJSON(key, value) {
   } catch {}
 }
 
+/* ─────────────── AUTH TOKEN ─────────────── */
+
+function getToken() {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+// Every protected request sends: Authorization: Bearer <token>
+function authHeaders(extra = {}) {
+  const token = getToken();
+  return token
+    ? { ...extra, Authorization: `Bearer ${token}` }
+    : extra;
+}
+
 async function apiRequest(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: {
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
+    headers: authHeaders({
+      "Content-Type": "application/json",
       ...options.headers,
-    },
+    }),
   });
 
   const data = await response.json().catch(() => null);
+
+  // A 401 on a protected route means the saved token is missing, invalid or
+  // expired. Clear it and return to the login screen. Login/signup 401s
+  // (wrong password) are shown on the login form instead.
+  const isAuthRoute = path.startsWith("/auth/");
+
+  if (response.status === 401 && !isAuthRoute) {
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+    } catch {}
+    window.dispatchEvent(new Event("futr:logout"));
+  }
 
   if (!response.ok) {
     throw new Error(data?.detail || `API Error: ${response.status}`);
@@ -1029,8 +1060,15 @@ function NutritionSection() {
     const loadSavedPlan = async () => {
       try {
         const response = await fetch(
-          `${API_BASE}/nutrition/plans/`
+          `${API_BASE}/nutrition/plans/`,
+          { headers: authHeaders() }
         );
+
+        if (response.status === 401) {
+          localStorage.removeItem(TOKEN_KEY);
+          window.dispatchEvent(new Event("futr:logout"));
+          return;
+        }
 
         if (!response.ok) {
           throw new Error(
@@ -1140,9 +1178,9 @@ function NutritionSection() {
         `${API_BASE}/nutrition/generate/`,
         {
           method: "POST",
-          headers: {
+          headers: authHeaders({
             "Content-Type": "application/json",
-          },
+          }),
           body: JSON.stringify(payload),
         }
       );
@@ -1214,10 +1252,12 @@ function NutritionSection() {
       const formData = new FormData();
       formData.append("file", file);
 
+      // No Content-Type here: the browser sets the multipart boundary itself.
       const response = await fetch(
         `${API_BASE}/nutrition/extract-pdf/`,
         {
           method: "POST",
+          headers: authHeaders(),
           body: formData,
         }
       );
@@ -1306,9 +1346,9 @@ function NutritionSection() {
 
       const response = await fetch(url, {
         method: planId ? "PUT" : "POST",
-        headers: {
+        headers: authHeaders({
           "Content-Type": "application/json",
-        },
+        }),
         body: JSON.stringify(payload),
       });
 
@@ -1826,41 +1866,14 @@ export default function App() {
   const now = new Date();
   const hour = now.getHours();
 
-  const [habits, setHabits] = useState([]);
-  const [habitsLoading, setHabitsLoading] = useState(true);
-  const [habitsError, setHabitsError] = useState("");
+  // Logged in if a token is saved; survives page refresh.
+  const [isAuthed, setIsAuthed] = useState(() => Boolean(getToken()));
   const [showLoader, setShowLoader] = useState(true);
-  const [isAuthed, setIsAuthed] = useState(false); // resets on every page load
 
-  useEffect(() => {
-    const startTime = Date.now();
-
-    const loadData = async () => {
-    try {
-        const [habitsData, logsData] = await Promise.all([
-          apiRequest("/habits/"),
-          apiRequest("/habit-logs/"),
-        ]);
-
-        setHabits(habitsData);
-        setHabitLogs(logsData);
-      } catch (error) {
-        setHabitsError(error.message);
-      } finally {
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, 3500 - elapsed);
-
-        setTimeout(() => {
-          setShowLoader(false);
-          setHabitsLoading(false);
-        }, remaining);
-      }
-    };
-
-    loadData();
-  }, []);
-
+  const [habits, setHabits] = useState([]);
   const [habitLogs, setHabitLogs] = useState([]);
+  const [habitsError, setHabitsError] = useState("");
+
   const [metrics, setMetrics] = useState(() => {
     const saved = loadJSON(METRICS_KEY, null);
 
@@ -1882,6 +1895,24 @@ export default function App() {
   const [showInput, setShowInput] = useState(false);
   const [extraHours, setExtraHours] = useState(2);
   const [mounted, setMounted] = useState(false);
+
+  // Startup loader: shown for a minimum time, then the login or dashboard.
+  useEffect(() => {
+    const timer = setTimeout(() => setShowLoader(false), 3500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Any 401 on a protected route drops the user back to the login screen.
+  useEffect(() => {
+    const onLogout = () => {
+      setIsAuthed(false);
+      setHabits([]);
+      setHabitLogs([]);
+    };
+
+    window.addEventListener("futr:logout", onLogout);
+    return () => window.removeEventListener("futr:logout", onLogout);
+  }, []);
 
   // Subtle mouse-follow glow (desktop only)
   useEffect(() => {
@@ -1915,31 +1946,33 @@ export default function App() {
     };
   }, []);
 
-  // Load habits and today's completion status from backend
+  // Load habits and logs only after login, so the requests carry the token.
   useEffect(() => {
+    if (!isAuthed) return;
+
     let active = true;
-  
+
     async function loadHabits() {
       try {
-        setHabitsLoading(true);
         setHabitsError("");
-  
+
         const [habitList, logs] = await Promise.all([
           apiRequest("/habits/"),
           apiRequest("/habit-logs/"),
         ]);
-        setHabitLogs(logs);
 
         if (!active) return;
-  
+
+        setHabitLogs(logs);
+
         const todayLogs = {};
-  
+
         logs.forEach((log) => {
           if (log.log_date === TODAY) {
             todayLogs[log.habit_id] = log.completed;
           }
         });
-  
+
         setHabits(
           habitList.map((habit) => ({
             ...habit,
@@ -1951,22 +1984,15 @@ export default function App() {
           setHabitsError(error.message);
           console.error("Habit loading failed:", error);
         }
-      } finally {
-        if (active) {
-          setHabitsLoading(false);
-        }
       }
     }
-  
+
     loadHabits();
-  
+
     return () => {
       active = false;
     };
-  }, []);
-
-  // Native phone step count
-  const [nativeSteps, setNativeSteps] = useState(null);
+  }, [isAuthed]);
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true));
@@ -1986,6 +2012,9 @@ export default function App() {
   }, [theme]);
 
   /* ─────────────── NATIVE STEPS SYNC ─────────────── */
+
+  // Native phone step count
+  const [nativeSteps, setNativeSteps] = useState(null);
 
   useEffect(() => {
     // if (!Capacitor.isNativePlatform()) return;
@@ -2056,14 +2085,14 @@ export default function App() {
   const score = total === 0 ? 0 : Math.round((completed / total) * 100);
   const scoreAnim = useCountUp(score);
 
-  
+
   const toggleHabit = async (id) => {
     const habit = habits.find((h) => h.id === id);
-  
+
     if (!habit) return;
-  
+
     const nextCompleted = !habit.completed;
-  
+
     try {
       await apiRequest("/habit-logs/daily", {
         method: "PUT",
@@ -2073,7 +2102,7 @@ export default function App() {
           completed: nextCompleted,
         }),
       });
-  
+
       setHabits((cur) =>
         cur.map((h) =>
           h.id === id
@@ -2118,7 +2147,7 @@ export default function App() {
       await apiRequest(`/habits/${id}`, {
         method: "DELETE",
       });
-  
+
       setHabits((cur) => cur.filter((h) => h.id !== id));
       setHabitsError("");
     } catch (error) {
@@ -2128,12 +2157,12 @@ export default function App() {
   };
 
 
-  
+
   const addHabit = async (e) => {
     e.preventDefault();
-  
+
     if (!newHabit.trim()) return;
-  
+
     try {
       const createdHabit = await apiRequest("/habits/", {
         method: "POST",
@@ -2143,7 +2172,7 @@ export default function App() {
           description: "",
         }),
       });
-  
+
       setHabits((cur) => [
         ...cur,
         {
@@ -2151,7 +2180,7 @@ export default function App() {
           completed: false,
         },
       ]);
-  
+
       setNewHabit("");
       setShowInput(false);
       setHabitsError("");
@@ -2181,20 +2210,20 @@ export default function App() {
         },
       },
     }));
-    
+
 
   /* ─────────────── WEEKLY SCORES ─────────────── */
 
     const weekly = useMemo(() => {
       return WEEKLY_DAYS.map((day) => {
         if (habits.length === 0) return 0;
-    
+
         const completedCount = habitLogs.filter(
           (log) =>
             log.log_date === day.iso &&
             log.completed
         ).length;
-    
+
         return Math.round(
           (completedCount / habits.length) * 100
         );
@@ -2230,16 +2259,24 @@ export default function App() {
 
   /* ─────────────── LOGIN ─────────────── */
 
-  // Replace the body of this function with your real auth call once the
-  // backend has /auth/login and /auth/signup endpoints.
+  // Saves the JWT from the backend response and opens the dashboard.
+  // Expected response: { access_token, token_type, user: { id, email, name } }
   const handleLogin = async ({ mode, name, email, password }) => {
-    await apiRequest(mode === "login" ? "/auth/login" : "/auth/signup", {
-      method: "POST",
-      body: JSON.stringify(
-        mode === "login" ? { email, password } : { name, email, password }
-      ),
-    });
+    const data = await apiRequest(
+      mode === "login" ? "/auth/login" : "/auth/signup",
+      {
+        method: "POST",
+        body: JSON.stringify(
+          mode === "login" ? { email, password } : { name, email, password }
+        ),
+      }
+    );
 
+    if (!data?.access_token) {
+      throw new Error("Login succeeded but no token was returned.");
+    }
+
+    localStorage.setItem(TOKEN_KEY, data.access_token);
     setIsAuthed(true);
   };
 
@@ -2487,7 +2524,7 @@ export default function App() {
                   setMetrics((current) => {
                     const previous =
                       current.mindfulness.history[TODAY] ?? 0;
-              
+
                     return {
                       ...current,
                       mindfulness: {

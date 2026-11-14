@@ -10,6 +10,12 @@ class DietPlan(Base):
     __tablename__ = "diet_plans"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=True,
+        index=True
+    )
     name = Column(String(150), nullable=False)
     source = Column(String(20), nullable=False)  # upload or ai
     description = Column(Text, nullable=True)

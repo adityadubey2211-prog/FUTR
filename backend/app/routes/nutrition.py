@@ -1,23 +1,21 @@
-from app.services.gemini_service import (
-    extract_diet_plan_with_gemini,
-    generate_diet_plan_with_gemini
-)
-from fastapi import APIRouter, Depends, HTTPException
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies.auth import get_current_user
+from app.models.user import User
 from app.models.nutrition import DietPlan, DietMeal
-from app.schemas.nutrition import (
-    DietPlanCreate,
-    DietPlanResponse
-)
-from fastapi import UploadFile, File
-from app.services.nutrition_service import extract_pdf_text
 from app.schemas.nutrition import (
     DietPlanCreate,
     DietPlanResponse,
     DietGenerationRequest
 )
+from app.services.gemini_service import (
+    extract_diet_plan_with_gemini,
+    generate_diet_plan_with_gemini
+)
+from app.services.nutrition_service import extract_pdf_text
 
 router = APIRouter(
     prefix="/nutrition",
@@ -25,12 +23,27 @@ router = APIRouter(
 )
 
 
+def get_user_diet_plan(db: Session, plan_id: int, user_id: int):
+    plan = db.query(DietPlan).filter(
+        DietPlan.id == plan_id,
+        DietPlan.user_id == user_id
+    ).first()
+
+    if not plan:
+        raise HTTPException(
+            status_code=404,
+            detail="Diet plan not found"
+        )
+
+    return plan
+
 
 # CREATE DIET PLAN
 @router.post("/plans/", response_model=DietPlanResponse)
 def create_diet_plan(
     plan_data: DietPlanCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     if plan_data.source not in ["upload", "ai"]:
         raise HTTPException(
@@ -39,6 +52,7 @@ def create_diet_plan(
         )
 
     new_plan = DietPlan(
+        user_id=current_user.id,
         name=plan_data.name,
         source=plan_data.source,
         description=plan_data.description
@@ -57,21 +71,23 @@ def create_diet_plan(
 
 # GET ALL DIET PLANS
 @router.get("/plans/", response_model=list[DietPlanResponse])
-def get_diet_plans(db: Session = Depends(get_db)):
-    return db.query(DietPlan).all()
+def get_diet_plans(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return db.query(DietPlan).filter(
+        DietPlan.user_id == current_user.id
+    ).all()
 
 
 # GET ONE DIET PLAN
 @router.get("/plans/{plan_id}", response_model=DietPlanResponse)
-def get_diet_plan(plan_id: int, db: Session = Depends(get_db)):
-    plan = db.query(DietPlan).filter(
-        DietPlan.id == plan_id
-    ).first()
-
-    if not plan:
-        raise HTTPException(status_code=404, detail="Diet plan not found")
-
-    return plan
+def get_diet_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return get_user_diet_plan(db, plan_id, current_user.id)
 
 
 # UPDATE DIET PLAN
@@ -79,20 +95,21 @@ def get_diet_plan(plan_id: int, db: Session = Depends(get_db)):
 def update_diet_plan(
     plan_id: int,
     plan_data: DietPlanCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    plan = db.query(DietPlan).filter(
-        DietPlan.id == plan_id
-    ).first()
+    plan = get_user_diet_plan(db, plan_id, current_user.id)
 
-    if not plan:
-        raise HTTPException(status_code=404, detail="Diet plan not found")
+    if plan_data.source not in ["upload", "ai"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Source must be upload or ai"
+        )
 
     plan.name = plan_data.name
     plan.source = plan_data.source
     plan.description = plan_data.description
 
-    # Replace existing meals with updated meals
     plan.meals.clear()
 
     for meal_data in plan_data.meals:
@@ -107,13 +124,12 @@ def update_diet_plan(
 
 # DELETE DIET PLAN
 @router.delete("/plans/{plan_id}")
-def delete_diet_plan(plan_id: int, db: Session = Depends(get_db)):
-    plan = db.query(DietPlan).filter(
-        DietPlan.id == plan_id
-    ).first()
-
-    if not plan:
-        raise HTTPException(status_code=404, detail="Diet plan not found")
+def delete_diet_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    plan = get_user_diet_plan(db, plan_id, current_user.id)
 
     db.delete(plan)
     db.commit()
@@ -121,11 +137,13 @@ def delete_diet_plan(plan_id: int, db: Session = Depends(get_db)):
     return {"message": "Diet plan deleted successfully"}
 
 
-
+# UPLOAD PDF
 @router.post("/upload-pdf/")
-async def upload_diet_pdf(file: UploadFile = File(...)):
-
-    if not file.filename.lower().endswith(".pdf"):
+async def upload_diet_pdf(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    if not (file.filename or "").lower().endswith(".pdf"):
         raise HTTPException(
             status_code=400,
             detail="Only PDF files are allowed"
@@ -161,9 +179,12 @@ async def upload_diet_pdf(file: UploadFile = File(...)):
         )
 
 
+# EXTRACT DIET PLAN FROM PDF
 @router.post("/extract-pdf/")
-async def extract_diet_pdf(file: UploadFile = File(...)):
-
+async def extract_diet_pdf(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
     if not (file.filename or "").lower().endswith(".pdf"):
         raise HTTPException(
             status_code=400,
@@ -194,7 +215,10 @@ async def extract_diet_pdf(file: UploadFile = File(...)):
         }
 
     except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error))
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
+        )
 
     except Exception as error:
         print("GEMINI EXTRACTION ERROR:", repr(error))
@@ -203,12 +227,13 @@ async def extract_diet_pdf(file: UploadFile = File(...)):
             status_code=500,
             detail=str(error)
         )
-        
-    
+
+
 # GENERATE AI DIET PLAN
 @router.post("/generate/")
 def generate_ai_diet_plan(
-    preferences: DietGenerationRequest
+    preferences: DietGenerationRequest,
+    current_user: User = Depends(get_current_user)
 ):
     try:
         diet_plan = generate_diet_plan_with_gemini(
