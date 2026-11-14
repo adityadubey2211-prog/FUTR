@@ -1,21 +1,48 @@
 
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "sqlite:///./futr.db" # Database location
-
-engine = create_engine(  # database coonection is created
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///./futr.db"
 )
 
-SessionLocal = sessionmaker( #here database session is created
+# Support Render PostgreSQL URLs
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgres://",
+        "postgresql+psycopg://",
+        1
+    )
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg://",
+        1
+    )
+
+connect_args = {}
+
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args
+)
+
+SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine
 )
 
-Base = declarative_base() #database model parent
+Base = declarative_base()
 
 def get_db():
     db = SessionLocal()
@@ -23,4 +50,3 @@ def get_db():
         yield db
     finally:
         db.close()
-        
