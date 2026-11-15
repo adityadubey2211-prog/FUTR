@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import "./App.css";
 import "./Nutrition.css";
 import FutureReport from "./Futurereport.jsx";
 import Loader from "./Loader";
 import LoginPage from "./Loginpage";
-import AICoachCard from "./AICoachCard"
+import AICoachCard from "./AICoachCard";
 
 /* ─────────────── NATIVE PLUGIN ─────────────── */
 
@@ -71,6 +71,34 @@ const TABS = [
   ["✦", "Future"],
 ];
 const MINDFULNESS_SESSION_KEY = "futr.mindfulness.session.v1";
+
+// Key used inside Futurereport.jsx to save the last report.
+const FUTURE_REPORT_KEY = "futr.futurereport.v1";
+
+// Everything saved per user. The theme is not included because it is a
+// device setting, not user data.
+const USER_CACHE_KEYS = [
+  METRICS_KEY,
+  HABITS_KEY,
+  NUTRITION_CHECKS_KEY,
+  MINDFULNESS_SESSION_KEY,
+  FUTURE_REPORT_KEY,
+];
+
+function clearUserCache() {
+  USER_CACHE_KEYS.forEach((key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+  });
+}
+
+function clearAuthToken() {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+  } catch {}
+}
+
 /* ─────────────── HELPERS ─────────────── */
 
 function loadJSON(key, fallback) {
@@ -123,9 +151,7 @@ async function apiRequest(path, options = {}) {
   const isAuthRoute = path.startsWith("/auth/");
 
   if (response.status === 401 && !isAuthRoute) {
-    try {
-      localStorage.removeItem(TOKEN_KEY);
-    } catch {}
+    clearAuthToken();
     window.dispatchEvent(new Event("futr:logout"));
   }
 
@@ -1066,7 +1092,7 @@ function NutritionSection() {
         );
 
         if (response.status === 401) {
-          localStorage.removeItem(TOKEN_KEY);
+          clearAuthToken();
           window.dispatchEvent(new Event("futr:logout"));
           return;
         }
@@ -1889,6 +1915,9 @@ export default function App() {
     return merged;
   });
 
+  // Native phone step count
+  const [nativeSteps, setNativeSteps] = useState(null);
+
   const [theme, setTheme] = useState(() => loadJSON(THEME_KEY, "light"));
   const [activeTab, setActiveTab] = useState("Today");
   const [newHabit, setNewHabit] = useState("");
@@ -1897,23 +1926,64 @@ export default function App() {
   const [extraHours, setExtraHours] = useState(2);
   const [mounted, setMounted] = useState(false);
 
+  /* ─────────────── SESSION / LOGOUT ─────────────── */
+
+  // Single place that ends a session. Used by the logout button, 401
+  // responses and logout in another tab.
+  const resetSession = useCallback(() => {
+    clearAuthToken();
+    clearUserCache();
+
+    setIsAuthed(false);
+    setHabits([]);
+    setHabitLogs([]);
+    setMetrics(DEFAULT_METRICS);
+    setNativeSteps(null);
+    setActiveTab("Today");
+    setShowInput(false);
+    setNewHabit("");
+    setHabitsError("");
+  }, []);
+
+  const handleLogout = () => {
+    resetSession();
+  };
+
   // Startup loader: shown for a minimum time, then the login or dashboard.
   useEffect(() => {
     const timer = setTimeout(() => setShowLoader(false), 3500);
     return () => clearTimeout(timer);
   }, []);
 
-  // Any 401 on a protected route drops the user back to the login screen.
+  // 401 from any protected request.
   useEffect(() => {
-    const onLogout = () => {
-      setIsAuthed(false);
-      setHabits([]);
-      setHabitLogs([]);
+    window.addEventListener("futr:logout", resetSession);
+    return () => window.removeEventListener("futr:logout", resetSession);
+  }, [resetSession]);
+
+  // Logout in another tab, and browser back/forward restoring an old page.
+  useEffect(() => {
+    const onStorage = (event) => {
+      if (event.key === TOKEN_KEY && !event.newValue) {
+        resetSession();
+      }
     };
 
-    window.addEventListener("futr:logout", onLogout);
-    return () => window.removeEventListener("futr:logout", onLogout);
-  }, []);
+    const onPageShow = (event) => {
+      // persisted is true when the page came from the back/forward cache.
+      if (event.persisted && !getToken()) {
+        resetSession();
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("pageshow", onPageShow);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, [resetSession]);
 
   // Subtle mouse-follow glow (desktop only)
   useEffect(() => {
@@ -2004,18 +2074,18 @@ export default function App() {
   //   saveJSON(HABITS_KEY, habits);
   // }, [habits]);
 
+  // Metrics are saved only while logged in, so a logged-out state never
+  // writes user data back to the browser.
   useEffect(() => {
+    if (!isAuthed) return;
     saveJSON(METRICS_KEY, metrics);
-  }, [metrics]);
+  }, [metrics, isAuthed]);
 
   useEffect(() => {
     saveJSON(THEME_KEY, theme);
   }, [theme]);
 
   /* ─────────────── NATIVE STEPS SYNC ─────────────── */
-
-  // Native phone step count
-  const [nativeSteps, setNativeSteps] = useState(null);
 
   useEffect(() => {
     // if (!Capacitor.isNativePlatform()) return;
@@ -2277,6 +2347,12 @@ export default function App() {
       throw new Error("Login succeeded but no token was returned.");
     }
 
+    // Start clean so a previous user's cached data is never shown.
+    clearUserCache();
+    setMetrics(DEFAULT_METRICS);
+    setHabits([]);
+    setHabitLogs([]);
+
     localStorage.setItem(TOKEN_KEY, data.access_token);
     setIsAuthed(true);
   };
@@ -2402,6 +2478,15 @@ export default function App() {
               {theme === "light" ? "☾" : "☀"}
             </button>
 
+            <button
+              className="theme-toggle"
+              onClick={handleLogout}
+              aria-label="Log out"
+              title="Log out"
+            >
+              ⏻
+            </button>
+
             <div className="date-pill">☀️ &nbsp; Your daily space</div>
             <div className="top-avatar">A</div>
           </div>
@@ -2487,6 +2572,9 @@ export default function App() {
                   />
                 </div>
               </section>
+
+              {/* AI HABIT COACH */}
+
               <AICoachCard apiRequest={apiRequest} />
 
               {/* DAILY METRICS */}
