@@ -17,6 +17,7 @@ const HABITS_KEY = "futr.habits.v2";
 const METRICS_KEY = "futr.metrics.v2";
 const THEME_KEY = "futr.theme.v1";
 const TOKEN_KEY = "access_token";
+const USER_KEY = "futr.user.v1";
 const CATEGORIES = ["Learning", "Personal", "Fitness", "Health"];
 function toLocalISODate(date) {
   const year = date.getFullYear();
@@ -63,7 +64,8 @@ const WEEKLY_DAYS = Array.from({ length: 7 }, (_, i) => {
     label: d.toLocaleDateString("en-US", { weekday: "short" }),
   };
 });
-
+// Name shown in the sidebar and topbar for every user.
+const COMMON_DISPLAY_NAME = "My Journey";
 const TABS = [
   ["◫", "Today"],
   ["◉", "Metrics"],
@@ -83,6 +85,7 @@ const USER_CACHE_KEYS = [
   NUTRITION_CHECKS_KEY,
   MINDFULNESS_SESSION_KEY,
   FUTURE_REPORT_KEY,
+  USER_KEY,
 ];
 
 function clearUserCache() {
@@ -160,6 +163,31 @@ async function apiRequest(path, options = {}) {
   }
 
   return data;
+}
+
+// Display helpers for the signed-in user.
+// Name comes from the login response; if missing, the part of the email
+// before "@" is used.
+// Common avatar for every user: a simple person silhouette.
+function UserAvatar() {
+  return (
+    <svg className="user-avatar-svg" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="18" r="7.5" />
+      <path d="M9 41c1.6-8.2 7.4-12.5 15-12.5S37.4 32.8 39 41" />
+    </svg>
+  );
+}
+
+function getDisplayName(user) {
+  if (user?.name?.trim()) return user.name.trim();
+  if (user?.email) return user.email.split("@")[0];
+  return "My Journey";
+}
+
+// First letter of the name, or of the email, shown in capitals.
+function getInitial(user) {
+  const source = (user?.name?.trim() || user?.email || "").trim();
+  return source ? source.charAt(0).toUpperCase() : "A";
 }
 
 function getGreeting(h) {
@@ -1897,6 +1925,13 @@ export default function App() {
   const [isAuthed, setIsAuthed] = useState(() => Boolean(getToken()));
   const [showLoader, setShowLoader] = useState(true);
 
+  // Signed-in user from the login response: { id, email, name }.
+  const [user, setUser] = useState(() => loadJSON(USER_KEY, null));
+
+  // Account menu (the ··· button at the bottom of the sidebar).
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
   const [habits, setHabits] = useState([]);
   const [habitLogs, setHabitLogs] = useState([]);
   const [habitsError, setHabitsError] = useState("");
@@ -1928,13 +1963,15 @@ export default function App() {
 
   /* ─────────────── SESSION / LOGOUT ─────────────── */
 
-  // Single place that ends a session. Used by the logout button, 401
+  // Single place that ends a session. Used by the logout menu, 401
   // responses and logout in another tab.
   const resetSession = useCallback(() => {
     clearAuthToken();
     clearUserCache();
 
     setIsAuthed(false);
+    setUser(null);
+    setMenuOpen(false);
     setHabits([]);
     setHabitLogs([]);
     setMetrics(DEFAULT_METRICS);
@@ -1954,6 +1991,29 @@ export default function App() {
     const timer = setTimeout(() => setShowLoader(false), 3500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Close the account menu when clicking anywhere outside it, or on Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onPointerDown = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   // 401 from any protected request.
   useEffect(() => {
@@ -2330,7 +2390,8 @@ export default function App() {
 
   /* ─────────────── LOGIN ─────────────── */
 
-  // Saves the JWT from the backend response and opens the dashboard.
+  // Saves the JWT and user details from the backend response, then opens
+  // the dashboard.
   // Expected response: { access_token, token_type, user: { id, email, name } }
   const handleLogin = async ({ mode, name, email, password }) => {
     const data = await apiRequest(
@@ -2353,6 +2414,14 @@ export default function App() {
     setHabits([]);
     setHabitLogs([]);
 
+    const signedInUser = data.user ?? {
+      email,
+      name: name || "",
+    };
+
+    saveJSON(USER_KEY, signedInUser);
+    setUser(signedInUser);
+
     localStorage.setItem(TOKEN_KEY, data.access_token);
     setIsAuthed(true);
   };
@@ -2366,6 +2435,10 @@ export default function App() {
   if (!isAuthed) {
     return <LoginPage onLogin={handleLogin} />;
   }
+
+  const displayName = COMMON_DISPLAY_NAME;
+  
+  const userEmail = user?.email || "";
 
   return (
     <div className="app-shell" data-theme={theme}>
@@ -2441,14 +2514,40 @@ export default function App() {
           </div>
 
           <div className="profile">
-            <div className="avatar">A</div>
+            <div className="avatar">
+                <UserAvatar />
+            </div>
 
-            <div>
-              <strong>My Journey</strong>
+            <div className="profile-text">
+              <strong>{displayName}</strong>
               <p>Building a better you</p>
             </div>
 
-            <span className="profile-menu">···</span>
+            <div className="profile-menu-wrap" ref={menuRef}>
+              <button
+                type="button"
+                className="profile-menu"
+                onClick={() => setMenuOpen((open) => !open)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-label="Account menu"
+              >
+                ···
+              </button>
+
+              {menuOpen && (
+                <div className="profile-dropdown" role="menu">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="profile-dropdown-item"
+                    onClick={handleLogout}
+                  >
+                    <span aria-hidden="true">⏻</span> Log out
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </aside>
@@ -2478,17 +2577,10 @@ export default function App() {
               {theme === "light" ? "☾" : "☀"}
             </button>
 
-            <button
-              className="theme-toggle"
-              onClick={handleLogout}
-              aria-label="Log out"
-              title="Log out"
-            >
-              ⏻
-            </button>
-
             <div className="date-pill">☀️ &nbsp; Your daily space</div>
-            <div className="top-avatar">A</div>
+            <div className="top-avatar" title={displayName}>
+                <UserAvatar />
+            </div>
           </div>
         </header>
 

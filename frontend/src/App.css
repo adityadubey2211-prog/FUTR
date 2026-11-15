@@ -2567,6 +2567,9 @@ html.cursor-active .cursor-glow {
   box-shadow: 0 0 0 2px var(--panel), 0 0 8px var(--shadow-strong);
 }
 
+
+
+
 .heatmap-legend {
   display: flex;
   align-items: center;
@@ -2613,6 +2616,9 @@ html.cursor-active .cursor-glow {
   color: var(--soft);
   letter-spacing: 0.3px;
 }
+
+
+
 
 .heatmap-months span {
   white-space: nowrap;
@@ -2847,4 +2853,105 @@ html.cursor-active .cursor-glow {
 
 @keyframes sheetUp {
   from { opacity: 0; transform: translateY(40px); }
+}
+/* ── Profile menu (··· + logout dropdown) ── */
+
+.profile-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.profile-text p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-menu-wrap {
+  position: relative;
+  margin-left: auto;
+}
+
+.profile-menu {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.profile-menu:hover,
+.profile-menu:focus-visible {
+  background: var(--hover);
+}
+
+.profile-dropdown {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 20;
+  min-width: 150px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 14px 34px var(--shadow-strong);
+  animation: riseIn .2s ease both;
+}
+
+
+
+
+.profile-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--bad);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.profile-dropdown-item:hover,
+.profile-dropdown-item:focus-visible {
+  background: var(--bad-bg);
+}
+
+/* ── Common user avatar (person silhouette) ── */
+
+.avatar svg,
+.top-avatar svg {
+  width: 58%;
+  height: 58%;
+  fill: rgba(255, 250, 242, 0.95);
+  display: block;
+}
+
+.avatar circle,
+.top-avatar circle,
+.avatar path,
+.top-avatar path {
+  stroke: none;
+}
+
+
+
+/* the avatar path is an outline, so it needs a stroke instead of a fill */
+.avatar svg path,
+.top-avatar svg path {
+  fill: none;
+  stroke: rgba(255, 250, 242, 0.95);
+  stroke-width: 3.2;
+  stroke-linecap: round;
 }
