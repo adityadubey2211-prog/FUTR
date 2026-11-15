@@ -5,6 +5,7 @@ import "./Nutrition.css";
 import FutureReport from "./Futurereport.jsx";
 import Loader from "./Loader";
 import LoginPage from "./Loginpage";
+import AICoachCard from "./AICoachCard"
 
 /* ─────────────── NATIVE PLUGIN ─────────────── */
 
@@ -2486,6 +2487,7 @@ export default function App() {
                   />
                 </div>
               </section>
+              <AICoachCard apiRequest={apiRequest} />
 
               {/* DAILY METRICS */}
 

@@ -1,0 +1,261 @@
+/* ══════════════════════════════════════
+   AI HABIT COACH CARD
+   Uses App.css theme tokens, so light and dark mode both work.
+══════════════════════════════════════ */
+
+.coach-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  margin-top: 24px;
+  padding: 26px;
+  border-radius: 20px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 5px 18px var(--shadow);
+}
+
+.coach-card::before {
+  content: "";
+  position: absolute;
+  top: -70px;
+  right: -70px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-2), transparent 70%);
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.coach-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.coach-head h2 {
+  margin: 0 0 4px;
+  font-family: "Playfair Display", serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.coach-sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.coach-badge {
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: var(--chip);
+  color: var(--accent-strong);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.coach-insight {
+  margin: 18px 0 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+.coach-label {
+  margin: 18px 0 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: var(--soft);
+}
+
+/* strongest / needs attention */
+
+.coach-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.coach-habit {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--chip);
+  border: 1px solid transparent;
+}
+
+.coach-habit.improve {
+  background: var(--warn-bg);
+}
+
+.coach-habit small {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: var(--soft);
+}
+
+.coach-habit strong {
+  font-family: "Playfair Display", serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+/* suggestions */
+
+.coach-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: coach;
+}
+
+.coach-list li {
+  position: relative;
+  padding: 11px 14px 11px 40px;
+  border-radius: 12px;
+  background: var(--input-bg);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  counter-increment: coach;
+}
+
+.coach-list li::before {
+  content: counter(coach);
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--hover);
+  color: var(--accent-strong);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.coach-motivation {
+  margin: 18px 0 0;
+  font-family: "Playfair Display", serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--accent-strong);
+}
+
+/* actions */
+
+.coach-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.coach-btn {
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(110deg, var(--accent), var(--accent-strong));
+  color: #fffaf2;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.coach-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px var(--shadow-strong);
+}
+
+.coach-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.coach-btn.ghost {
+  background: var(--chip);
+  color: var(--accent-strong);
+  border: 1px solid var(--input-border);
+}
+
+/* loading */
+
+.coach-skeleton-wrap {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.coach-skeleton {
+  height: 12px;
+  width: 100%;
+  border-radius: 6px;
+  background: var(--track);
+  animation: coachPulse 1.4s ease-in-out infinite;
+}
+
+.coach-skeleton--wide { height: 16px; }
+.coach-skeleton--short { width: 60%; }
+
+@keyframes coachPulse {
+  50% { opacity: 0.45; }
+}
+
+/* empty + error */
+
+.coach-empty,
+.coach-error {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.coach-empty {
+  background: var(--chip);
+  color: var(--muted);
+}
+
+.coach-error {
+  background: var(--bad-bg);
+  color: var(--bad);
+  border: 1px solid var(--bad);
+}
+
+/* responsive */
+
+@media (max-width: 650px) {
+  .coach-card { padding: 18px; border-radius: 18px; }
+  .coach-grid { grid-template-columns: 1fr; }
+  .coach-actions { flex-direction: column; align-items: stretch; }
+  .coach-btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-skeleton { animation: none; }
+}

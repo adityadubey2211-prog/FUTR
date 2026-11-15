@@ -1,5 +1,6 @@
 
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -7,17 +8,15 @@ from app.models.user import User
 from app.services.auth_service import decode_access_token
 
 
+security = HTTPBearer()
+
+
 def get_current_user(
-    authorization: str = Header(None),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Not authenticated"
-        )
+    token = credentials.credentials
 
-    token = authorization.split(" ", 1)[1]
     user_id = decode_access_token(token)
 
     if not user_id:

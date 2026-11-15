@@ -22,6 +22,7 @@ from app.routes.analytics import router as analytics_router
 from app.routes.dashboard import router as dashboard_router
 from app.routes.nutrition import router as nutrition_router
 from app.routes.future_report import router as future_report_router
+from app.routes.ai_coach import router as ai_coach_router
 
 
 # Create database tables
@@ -62,7 +63,7 @@ app.include_router(analytics_router)
 app.include_router(dashboard_router)
 app.include_router(nutrition_router)
 app.include_router(future_report_router)
-
+app.include_router(ai_coach_router)
 
 # Root Endpoint
 @app.get("/")
